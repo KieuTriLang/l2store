@@ -14,6 +14,8 @@
 @Data
 @Entity
 public class Product{
+    @Id
+    @GeneratedValue(strategy = GeneratedType.IDENTITY)
     private int id;
     private String productCode;
     private String name;
