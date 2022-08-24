@@ -44,8 +44,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.authorizeRequests().antMatchers("/api/login/**", "/api/user/token/refresh/**").permitAll();
-        http.authorizeRequests().antMatchers(HttpMethod.GET,
-                "/api/user/all/**").hasAnyAuthority("ROLE_SUPER_ADMIN");
+        // User
+        http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/user/all/**").permitAll();
+        http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/user/**").hasAnyAuthority("ROLE_MANAGER");
 
         http.authorizeRequests().anyRequest().authenticated();
 

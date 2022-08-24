@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,9 +29,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.entity.User;
+import com.ktl.l2store.exception.User.UserNotfoundException;
 import com.ktl.l2store.service.user.UserService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/user")
@@ -40,12 +43,30 @@ public class UserApi {
     @Autowired
     private UserService userService;
 
+    // Get all info user
     @RequestMapping(value = "/all", method = RequestMethod.GET)
     public ResponseEntity<List<User>> getUsers() {
         List<User> data = userService.getUsers();
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
+    // Get user by user name
+    @RequestMapping(value = "/{username}", method = RequestMethod.GET)
+    public ResponseEntity<Object> getUserByUsername(@PathVariable("username") String username) {
+        User user = userService.getUser(username);
+        if (user == null) {
+            throw new UserNotfoundException("Not found username: " + username);
+        }
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    // Add role to user
+    @RequestMapping(value = "/role", method = RequestMethod.POST)
+    public void addRoleToUser(@RequestParam("username") String username, @RequestParam("roleName") String roleName) {
+        userService.addRoleToUser(username, roleName);
+    }
+
+    // Refresh token
     @RequestMapping(value = "/token/refresh", method = RequestMethod.GET)
     public void refreshToken(HttpServletRequest request, HttpServletResponse response)
             throws JsonGenerationException, JsonMappingException, IOException {

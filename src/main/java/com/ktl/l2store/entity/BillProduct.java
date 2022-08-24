@@ -1,14 +1,12 @@
 package com.ktl.l2store.entity;
 
-import java.time.ZonedDateTime;
-import java.util.Collection;
-
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,19 +16,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Data
-public class Bill {
+@Table(name = "bill_products")
+public class BillProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String billCode;
+    @ManyToOne
+    @JoinColumn(name = "bill_id")
+    private Bill bill;
 
-    @OneToMany(mappedBy = "bill", fetch = FetchType.EAGER)
-    private Collection<BillProduct> cart;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     private int salesoff;
 
-    private float total;
+    private int quantity;
 
-    private ZonedDateTime createdTime;
 }

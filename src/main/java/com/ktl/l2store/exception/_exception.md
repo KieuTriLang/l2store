@@ -12,7 +12,7 @@
 public class ApiException {
     private HttpStatus httpStatus;
     private String message;
-    private ZoneDateTime timestamp;
+    private ZonedDateTime timestamp;
 }
 ```
 ###### **_product/ProductNotfoundException.java_**

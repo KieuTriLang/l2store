@@ -1,6 +1,7 @@
 package com.ktl.l2store;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 import org.springframework.boot.CommandLineRunner;
@@ -39,14 +40,62 @@ public class L2storeApplication {
 			userService.saveRole(new Role(null, "ROLE_ADMIN"));
 			userService.saveRole(new Role(null, "ROLE_SUPER_ADMIN"));
 
-			userService.saveUser(new User(null, "superadmin", "superadmin", "superadmin@gmail.com", "1234", true,
-					LocalDateTime.now(), new ArrayList<>(), LocalDateTime.now()));
-			userService.saveUser(new User(null, "admin", "admin", "admin@gmail.com", "1234", true, LocalDateTime.now(),
-					new ArrayList<>(), LocalDateTime.now()));
-			userService.saveUser(new User(null, "manager", "manager", "manager@gmail.com", "1234", true,
-					LocalDateTime.now(), new ArrayList<>(), LocalDateTime.now()));
-			userService.saveUser(new User(null, "user", "user", "user@gmail.com", "1234", true, LocalDateTime.now(),
-					new ArrayList<>(), LocalDateTime.now()));
+			userService.saveUser(
+					new User(
+							null,
+							"superadmin",
+							"superadmin",
+							"superadmin@gmail.com",
+							"1234",
+							true,
+							ZonedDateTime.now(ZoneId.of("Z")),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							ZonedDateTime.now(ZoneId.of("Z"))));
+			userService.saveUser(
+					new User(
+							null,
+							"admin",
+							"admin",
+							"admin@gmail.com",
+							"1234",
+							true,
+							ZonedDateTime.now(ZoneId.of("Z")),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							ZonedDateTime.now(ZoneId.of("Z"))));
+			userService.saveUser(
+					new User(
+							null,
+							"manager",
+							"manager",
+							"manager@gmail.com",
+							"1234",
+							true,
+							ZonedDateTime.now(ZoneId.of("Z")),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							ZonedDateTime.now(ZoneId.of("Z"))));
+			userService.saveUser(
+					new User(
+							null,
+							"user",
+							"user",
+							"user@gmail.com",
+							"1234",
+							true,
+							ZonedDateTime.now(ZoneId.of("Z")),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							new ArrayList<>(),
+							ZonedDateTime.now(ZoneId.of("Z"))));
 
 			userService.addRoleToUser("superadmin", "ROLE_SUPER_ADMIN");
 			userService.addRoleToUser("superadmin", "ROLE_MANAGER");
