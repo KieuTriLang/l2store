@@ -1,5 +1,7 @@
 package com.ktl.l2store.service.user;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,8 +15,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.entity.User;
+import com.ktl.l2store.exception.ItemExistException;
+import com.ktl.l2store.exception.ItemNotfoundException;
+import com.ktl.l2store.repo.ProductRepo;
 import com.ktl.l2store.repo.RoleRepo;
 import com.ktl.l2store.repo.UserRepo;
 
@@ -32,18 +38,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private RoleRepo roleRepo;
     @Autowired
+    private ProductRepo productRepo;
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // TODO Auto-generated method stub
-        User user = userRepo.findByUsername(username);
-        if (user == null) {
-            log.error("user not found in database");
-            throw new UsernameNotFoundException("Not found user in database");
-        } else {
-            log.info("found user {}", username);
-        }
+        log.info("");
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new ItemNotfoundException("Not found user: " + username));
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
         user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getName())));
@@ -55,8 +59,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User saveUser(User user) {
         // TODO Auto-generated method stub
-        log.info("ok");
+        if (userRepo.existsUserByUsername(user.getUsername()))
+            throw new ItemExistException("Username is exist");
+        Role role = roleRepo.findByName("ROLE_USER").orElseThrow();
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.getRoles().add(role);
         return userRepo.save(user);
     }
 
@@ -67,23 +74,72 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void addRoleToUser(String username, String roleName) {
+    public void addRoleToUser(String username, String roleName) throws ItemNotfoundException {
         // TODO Auto-generated method stub
-        User user = userRepo.findByUsername(username);
-        Role role = roleRepo.findByName(roleName);
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new ItemNotfoundException("Not found user: " + username));
+        Role role = roleRepo.findByName(roleName)
+                .orElseThrow(() -> new ItemNotfoundException("Not found role: " + roleName));
         user.getRoles().add(role);
     }
 
     @Override
     public User getUser(String username) {
         // TODO Auto-generated method stub
-        return userRepo.findByUsername(username);
+        return userRepo.findByUsername(username)
+                .orElseThrow(() -> new ItemNotfoundException("Not found user: " + username));
     }
 
     @Override
     public List<User> getUsers() {
         // TODO Auto-generated method stub
         return userRepo.findAll();
+    }
+
+    @Override
+    public List<Role> getRoles() {
+        // TODO Auto-generated method stub
+        return roleRepo.findAll();
+    }
+
+    @Override
+    public void removeRoleFromUser(String username, String roleName) throws ItemNotfoundException {
+        // TODO Auto-generated method stub
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new ItemNotfoundException("Not found user: " + username));
+        user.getRoles().removeIf(item -> item.getName().toLowerCase().equals(roleName));
+    }
+
+    @Override
+    public User updateUser(User user) throws ItemNotfoundException {
+        // TODO Auto-generated method stub
+        User record = userRepo.findByUsername(user.getUsername())
+                .orElseThrow(() -> new ItemNotfoundException("Not found user: " + user.getUsername()));
+        record.setDisplayName(user.getDisplayName());
+        record.setEmail(user.getEmail());
+        record.setGender(user.isGender());
+        record.getAvatar().setData(user.getAvatar().getData());
+        record.getAvatar().setName(user.getAvatar().getName());
+        record.getAvatar().setType(user.getAvatar().getType());
+        record.setAddress(user.getAddress());
+        record.setDob(user.getDob());
+        record.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Z")));
+        return userRepo.save(record);
+    }
+
+    @Override
+    public void addToFav(String username, Long pid) throws ItemNotfoundException {
+        // TODO Auto-generated method stub
+        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
+        Product product = productRepo.findById(pid).orElseThrow(() -> new ItemNotfoundException("Not found product"));
+        user.getFavProducts().add(product);
+    }
+
+    @Override
+    public void removeFromFav(String username, Long pid) throws ItemNotfoundException {
+        // TODO Auto-generated method stub
+        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
+        user.getFavProducts().stream().filter(item -> !(item.getId() == pid));
     }
 
 }

@@ -1,0 +1,24 @@
+package com.ktl.l2store.service.image;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.ktl.l2store.entity.FileDB;
+import com.ktl.l2store.exception.ItemNotfoundException;
+import com.ktl.l2store.repo.FileDBRepo;
+
+@Service
+public class FileDBServiceImpl implements FileDBService {
+
+    @Autowired
+    private FileDBRepo fileDBRepo;
+
+    @Override
+    public FileDB getImageByFileCode(Long fileCode) {
+        // TODO Auto-generated method stub
+        FileDB file = fileDBRepo.findByFileCode(fileCode)
+                .orElseThrow(() -> new ItemNotfoundException("Not found file"));
+        return file;
+    }
+
+}

@@ -24,6 +24,7 @@ dependencies {
   	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'com.auth0:java-jwt:3.18.3'
 	compileOnly 'org.projectlombok:lombok'
+	compileOnly 'org.modelmapper:modelmapper:3.1.0'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'mysql:mysql-connector-java'
 	annotationProcessor 'org.projectlombok:lombok'

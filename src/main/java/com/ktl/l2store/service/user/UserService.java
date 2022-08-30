@@ -4,15 +4,27 @@ import java.util.List;
 
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.entity.User;
+import com.ktl.l2store.exception.ItemNotfoundException;
 
 public interface UserService {
+
     User saveUser(User user);
 
     Role saveRole(Role role);
 
-    void addRoleToUser(String username, String roleName);
+    User getUser(String username) throws ItemNotfoundException;
 
-    User getUser(String username);
+    User updateUser(User user) throws ItemNotfoundException;
+
+    List<Role> getRoles();
 
     List<User> getUsers();
+
+    void addRoleToUser(String username, String roleName) throws ItemNotfoundException;
+
+    void removeRoleFromUser(String username, String roleName) throws ItemNotfoundException;
+
+    void addToFav(String username, Long pid) throws ItemNotfoundException;
+
+    void removeFromFav(String username, Long pid) throws ItemNotfoundException;
 }

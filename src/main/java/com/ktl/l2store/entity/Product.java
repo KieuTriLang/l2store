@@ -14,11 +14,13 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 @Data
 public class Product {
@@ -37,9 +39,13 @@ public class Product {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Category> categories;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany()
     @Fetch(FetchMode.SUBSELECT)
     private Collection<Evaluate> evaluates;
+
+    @OneToMany()
+    @Fetch(FetchMode.SUBSELECT)
+    private Collection<FileDB> images;
 
     private boolean isLocked;
 }
