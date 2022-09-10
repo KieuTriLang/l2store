@@ -2,7 +2,6 @@ package com.ktl.l2store.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -46,11 +45,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/api/login/**", "/api/user/token/refresh/**", "/api/user/register/**")
                 .permitAll();
         // User
-        http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/user/all/**").permitAll();
-        http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/user/**").hasAnyAuthority("ROLE_USER");
+        http.authorizeRequests().antMatchers("/api/users/all/**", "/api/users/like-name").permitAll();
+        http.authorizeRequests().antMatchers("/api/users/**").hasAnyAuthority("ROLE_USER");
         // Image
-        http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/file/**").permitAll();
-        http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/file/download/**").authenticated();
+        http.authorizeRequests().antMatchers("/api/file/**").permitAll();
+        http.authorizeRequests().antMatchers("/api/file/download/**").authenticated();
+
         http.authorizeRequests().anyRequest().authenticated();
 
         http.addFilter(customAuthenticaionFilter);

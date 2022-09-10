@@ -1,10 +1,10 @@
-package com.ktl.l2store.dto.res;
+package com.ktl.l2store.dto;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
 
-import com.ktl.l2store.common.URIBuilder;
 import com.ktl.l2store.entity.Role;
+import com.ktl.l2store.provider.URIBuilder;
 
 import lombok.Data;
 
@@ -15,7 +15,7 @@ public class UserDto {
 
     private boolean gender;
 
-    private String imageUrl;
+    private String avatar;
 
     private String address;
 
@@ -23,7 +23,7 @@ public class UserDto {
 
     private ZonedDateTime dob;
 
-    public void setImageUrl(String imageCode) {
-        this.imageUrl = URIBuilder.generate("/api/file/" + imageCode);
+    public void setAvatarUri(String avatarCode) {
+        this.avatar = URIBuilder.generate("/api/file/" + avatarCode);
     }
 }

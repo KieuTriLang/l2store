@@ -30,80 +30,59 @@ public class L2storeApplication {
 	@Bean
 	CommandLineRunner run(UserService userService) {
 		return arg -> {
-			// userService.saveRole(new Role(null, "ROLE_USER", new ArrayList<>()));
-			// userService.saveRole(new Role(null, "ROLE_MANAGER", new ArrayList<>()));
-			// userService.saveRole(new Role(null, "ROLE_ADMIN", new ArrayList<>()));
-			// userService.saveRole(new Role(null, "ROLE_SUPER_ADMIN", new ArrayList<>()));
-
 			userService.saveRole(new Role(null, "ROLE_USER"));
 			userService.saveRole(new Role(null, "ROLE_MANAGER"));
 			userService.saveRole(new Role(null, "ROLE_ADMIN"));
 			userService.saveRole(new Role(null, "ROLE_SUPER_ADMIN"));
 
 			userService.saveUser(
-					new User(
-							null,
-							"superadmin",
-							"superadmin",
-							"superadmin@gmail.com",
-							"1234",
-							true,
-							null,
-							"New york",
-							ZonedDateTime.now(ZoneId.of("Z")),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							ZonedDateTime.now(ZoneId.of("Z"))));
+					User.builder()
+							.username("superadmin")
+							.password("1234")
+							.displayName("superadmin")
+							.gender(true)
+							.email("superadmin@gmail.com")
+							.address("NewYork")
+							.dob(ZonedDateTime.now(ZoneId.of("Z")))
+							.roles(new ArrayList<>())
+							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+							.build());
 			userService.saveUser(
-					new User(
-							null,
-							"admin",
-							"admin",
-							"admin@gmail.com",
-							"1234",
-							true,
-							null,
-							"japanese",
-							ZonedDateTime.now(ZoneId.of("Z")),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							ZonedDateTime.now(ZoneId.of("Z"))));
+					User.builder()
+							.username("admin")
+							.password("1234")
+							.gender(true)
+							.displayName("admin")
+							.email("admin@gmail.com")
+							.address("NewYork")
+							.dob(ZonedDateTime.now(ZoneId.of("Z")))
+							.roles(new ArrayList<>())
+							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+							.build());
 			userService.saveUser(
-					new User(
-							null,
-							"manager",
-							"manager",
-							"manager@gmail.com",
-							"1234",
-							true,
-							null,
-							"vietnamese",
-							ZonedDateTime.now(ZoneId.of("Z")),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							ZonedDateTime.now(ZoneId.of("Z"))));
+					User.builder()
+							.username("manager")
+							.password("1234")
+							.gender(true)
+							.displayName("manager")
+							.email("manager@gmail.com")
+							.address("NewYork")
+							.roles(new ArrayList<>())
+							.dob(ZonedDateTime.now(ZoneId.of("Z")))
+							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+							.build());
 			userService.saveUser(
-					new User(
-							null,
-							"user",
-							"user",
-							"user@gmail.com",
-							"1234",
-							true,
-							null,
-							"italia",
-							ZonedDateTime.now(ZoneId.of("Z")),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							new ArrayList<>(),
-							ZonedDateTime.now(ZoneId.of("Z"))));
+					User.builder()
+							.username("user")
+							.password("1234")
+							.displayName("user")
+							.gender(true)
+							.email("user@gmail.com")
+							.address("NewYork")
+							.roles(new ArrayList<>())
+							.dob(ZonedDateTime.now(ZoneId.of("Z")))
+							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+							.build());
 
 			userService.addRoleToUser("superadmin", "ROLE_SUPER_ADMIN");
 			userService.addRoleToUser("superadmin", "ROLE_MANAGER");

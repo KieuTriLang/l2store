@@ -1,25 +1,11 @@
 package com.ktl.l2store.entity;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-
+import javax.persistence.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,10 +18,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 public class User {
-    public User(Object object, String string, String string2, String string3, String string4, boolean b,
-            ZonedDateTime now, Object object2, ArrayList<Role> arrayList, ArrayList<Product> arrayList2,
-            ArrayList<Bill> arrayList3, ZonedDateTime now2) {
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +26,7 @@ public class User {
     @Column(unique = true)
     private String username;
 
+    @Column(name = "display_name")
     private String displayName;
 
     private String email;
@@ -54,7 +37,7 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "avatar_id")
-    @JsonIgnore
+    @Embedded
     private FileDB avatar;
 
     private String address;
@@ -62,6 +45,7 @@ public class User {
     private ZonedDateTime dob;
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     private Collection<Role> roles;
 
     @ManyToMany()
@@ -72,9 +56,13 @@ public class User {
     @Fetch(FetchMode.SUBSELECT)
     private Collection<Bill> bills;
 
-    @OneToMany()
+    @OneToMany(mappedBy = "owner")
     @Fetch(FetchMode.SUBSELECT)
     private Collection<ComboProduct> comboProducts;
 
+    @OneToMany(mappedBy = "user")
+    private Collection<Evaluate> evaluates;
+
+    @Column(name = "update_at")
     private ZonedDateTime updatedAt;
 }

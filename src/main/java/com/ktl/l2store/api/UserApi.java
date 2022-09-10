@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,22 +37,21 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ktl.l2store.common.AuthorizationHeader;
 import com.ktl.l2store.common.RegisterForm;
-import com.ktl.l2store.dto.req.ReqUserDto;
-import com.ktl.l2store.dto.res.UserDto;
+import com.ktl.l2store.dto.ComboProductDto;
+import com.ktl.l2store.dto.ProductOverviewDto;
+import com.ktl.l2store.dto.UserDto;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemNotfoundException;
+import com.ktl.l2store.provider.AuthorizationHeader;
 import com.ktl.l2store.service.user.UserService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserApi {
 
@@ -61,8 +62,13 @@ public class UserApi {
     private ModelMapper mapper;
 
     // Get all info user
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
-    public ResponseEntity<Object> getUsers() {
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public ResponseEntity<Object> getUsers(
+            @RequestParam(name = "search", required = false) String keyword,
+            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "limited", required = false, defaultValue = "12") Integer limited,
+            @RequestParam(name = "sortTar", required = false, defaultValue = "id") String sortTar,
+            @RequestParam(name = "sortDir", required = false, defaultValue = "asc") String sortDir) {
 
         List<UserDto> userDtos = userService.getUsers().stream().map(i -> mapper.map(i, UserDto.class)).toList();
 
@@ -79,26 +85,27 @@ public class UserApi {
 
     // Update user
     @RequestMapping(value = "/update", method = RequestMethod.PUT, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Object> requestMethodName(
+    public ResponseEntity<Object> updateUser(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @RequestPart ReqUserDto reqUserDto,
+            @RequestPart UserDto reqUserDto,
             @RequestPart(required = false) MultipartFile file) throws IOException {
         String username = AuthorizationHeader.getSub(authorizationHeader);
 
         User user = User.builder()
                 .username(username)
                 .displayName(reqUserDto.getDisplayName())
-                .gender(reqUserDto.getGender() > 0 ? true : false)
+                .gender(reqUserDto.isGender())
                 .address(reqUserDto.getAddress())
                 .dob(reqUserDto.getDob())
                 .build();
         if (file != null) {
             user.setAvatar(
-                    new FileDB(null, null, file.getBytes(), file.getOriginalFilename(), file.getContentType()));
+                    new FileDB(null, null, file.getBytes(), "avatar", file.getContentType()));
         }
 
-        mapper.getTypeMap(User.class, UserDto.class).addMapping(u -> u.getAvatar().getFileCode(),
-                UserDto::setImageUrl);
+        // mapper.getTypeMap(User.class, UserDto.class).addMapping(u ->
+        // u.getAvatar().getFileCode(),
+        // UserDto::setAvatarUri);
 
         return ResponseEntity.status(HttpStatus.OK).body(mapper.map(userService.updateUser(user), UserDto.class));
 
@@ -130,7 +137,7 @@ public class UserApi {
     }
 
     // Add role to user
-    @RequestMapping(value = "/role/add", method = RequestMethod.POST)
+    @RequestMapping(value = "/role", method = RequestMethod.POST)
     public void addRoleToUser(
             @RequestParam("username") String username,
             @RequestParam("roleName") String roleName) throws ItemNotfoundException {
@@ -139,13 +146,32 @@ public class UserApi {
 
     }
 
-    @RequestMapping(value = "/role/remove", method = RequestMethod.POST)
+    // Remove role from user
+    @RequestMapping(value = "/role", method = RequestMethod.DELETE)
     public void removeRoleFromUser(
             @RequestParam("username") String username,
             @RequestParam("roleName") String roleName) throws ItemNotfoundException {
 
         userService.removeRoleFromUser(username, roleName);
 
+    }
+
+    // get list fav product
+    @RequestMapping(value = "/fav-products", method = RequestMethod.GET)
+    public ResponseEntity<Object> getFavProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        String username = AuthorizationHeader.getSub(authorizationHeader);
+        List<ProductOverviewDto> productOverviewDtos = userService.getFavProducts(username).stream()
+                .map(item -> mapper.map(item, ProductOverviewDto.class)).toList();
+        return ResponseEntity.ok().body(productOverviewDtos);
+    }
+
+    // get list combo product
+    @RequestMapping(value = "/cb-products", method = RequestMethod.GET)
+    public ResponseEntity<Object> getCbProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        String username = AuthorizationHeader.getSub(authorizationHeader);
+        List<ComboProductDto> cbProductDtos = userService.getCbProducts(username).stream()
+                .map(item -> mapper.map(item, ComboProductDto.class)).toList();
+        return ResponseEntity.ok().body(cbProductDtos);
     }
 
     // Refresh token

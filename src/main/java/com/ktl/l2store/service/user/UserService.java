@@ -2,6 +2,11 @@ package com.ktl.l2store.service.user;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.ktl.l2store.entity.ComboProduct;
+import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemNotfoundException;
@@ -24,7 +29,9 @@ public interface UserService {
 
     void removeRoleFromUser(String username, String roleName) throws ItemNotfoundException;
 
-    void addToFav(String username, Long pid) throws ItemNotfoundException;
+    List<Product> getFavProducts(String username);
 
-    void removeFromFav(String username, Long pid) throws ItemNotfoundException;
+    List<ComboProduct> getCbProducts(String username);
+
+    Page<User> getUserByUsernameContaining(String username, Pageable pageable);
 }

@@ -1,4 +1,4 @@
-package com.ktl.l2store.dto.res;
+package com.ktl.l2store.dto;
 
 public class ComboProductDto {
 

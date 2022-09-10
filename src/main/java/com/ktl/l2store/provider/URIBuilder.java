@@ -1,4 +1,4 @@
-package com.ktl.l2store.common;
+package com.ktl.l2store.provider;
 
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 

@@ -1,4 +1,4 @@
-package com.ktl.l2store.common;
+package com.ktl.l2store.provider;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

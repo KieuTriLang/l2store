@@ -1,5 +1,6 @@
 package com.ktl.l2store.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,5 +21,6 @@ public class Category {
 
     private String name;
 
+    @Column(name = "is_locked")
     private boolean isLocked;
 }

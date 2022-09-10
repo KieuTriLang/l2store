@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ktl.l2store.entity.FileDB;
-import com.ktl.l2store.service.image.FileDBService;
+import com.ktl.l2store.service.FileDB.FileDBService;
+
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @RestController

@@ -1,4 +1,4 @@
-package com.ktl.l2store.service.image;
+package com.ktl.l2store.service.FileDB;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

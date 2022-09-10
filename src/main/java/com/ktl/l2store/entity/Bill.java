@@ -3,6 +3,7 @@ package com.ktl.l2store.entity;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -23,14 +24,17 @@ public class Bill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "bill_code")
     private String billCode;
 
     @OneToMany(mappedBy = "bill", fetch = FetchType.EAGER)
     private Collection<BillProduct> cart;
 
+    @Column(name = "sales_off")
     private int salesoff;
 
     private float total;
 
+    @Column(name = "created_time")
     private ZonedDateTime createdTime;
 }

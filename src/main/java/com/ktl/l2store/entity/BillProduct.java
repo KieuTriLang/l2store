@@ -1,5 +1,6 @@
 package com.ktl.l2store.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -30,6 +31,7 @@ public class BillProduct {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @Column(name = "sales_off")
     private int salesoff;
 
     private int quantity;

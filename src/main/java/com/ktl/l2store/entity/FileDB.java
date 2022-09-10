@@ -1,6 +1,7 @@
 package com.ktl.l2store.entity;
 
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,12 +16,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Data
+@Embeddable
 public class FileDB {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "file_code")
     private Long fileCode;
 
     @Lob
