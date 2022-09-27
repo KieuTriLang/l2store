@@ -7,8 +7,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,8 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ktl.l2store.entity.ComboProduct;
-import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemExistException;
@@ -117,7 +113,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         // TODO Auto-generated method stub
         User record = userRepo.findByUsername(user.getUsername())
                 .orElseThrow(() -> new ItemNotfoundException("Not found user: " + user.getUsername()));
-        record.setDisplayName(user.getDisplayName());
+        record.setFirstName(user.getFirstName());
+        record.setLastName(user.getLastName());
         record.setEmail(user.getEmail());
         record.setGender(user.isGender());
         record.getAvatar().setData(user.getAvatar().getData());
@@ -127,26 +124,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         record.setDob(user.getDob());
         record.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Z")));
         return userRepo.save(record);
-    }
-
-    @Override
-    public List<Product> getFavProducts(String username) {
-        // TODO Auto-generated method stub
-        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
-        return user.getFavProducts().stream().toList();
-    }
-
-    @Override
-    public List<ComboProduct> getCbProducts(String username) {
-        // TODO Auto-generated method stub
-        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
-        return user.getComboProducts().stream().toList();
-    }
-
-    @Override
-    public Page<User> getUserByUsernameContaining(String username, Pageable pageable) {
-        // TODO Auto-generated method stub
-        return userRepo.findByUsernameContaining(username, pageable);
     }
 
 }

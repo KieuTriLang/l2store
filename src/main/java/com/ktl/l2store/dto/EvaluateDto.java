@@ -17,7 +17,7 @@ public class EvaluateDto {
 
     private int star;
 
-    private String comment;
+    private String content;
 
     private Long productId;
 

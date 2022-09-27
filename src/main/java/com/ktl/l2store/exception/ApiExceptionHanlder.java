@@ -40,4 +40,15 @@ public class ApiExceptionHanlder {
                 ZonedDateTime.now(ZoneId.of("Z")));
         return new ResponseEntity<>(apiException, badRequest);
     }
+
+    @ExceptionHandler(value = { ListException.class })
+    public ResponseEntity<Object> listException(ListException exception) {
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+        ApiException apiException = new ApiException(
+                badRequest,
+                exception.getMessages(),
+                ZonedDateTime.now(ZoneId.of("Z")));
+        return new ResponseEntity<>(apiException, badRequest);
+    }
+
 }

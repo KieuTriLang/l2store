@@ -16,7 +16,7 @@ public class ProductDetailDto {
 
     private String overview;
 
-    private String description;
+    private String detail;
 
     private String image;
 

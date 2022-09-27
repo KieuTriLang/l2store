@@ -1,0 +1,67 @@
+package com.ktl.l2store.entity;
+
+import java.time.ZonedDateTime;
+import java.util.Collection;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+import com.ktl.l2store.common.PaymentType;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Data
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToMany(mappedBy = "order")
+    private Collection<OrderProduct> orderProducts;
+
+    @OneToMany(mappedBy = "order")
+    private Collection<OrderCombo> orderCombos;
+
+    @Column(columnDefinition = "Decimal(3,2) default 0")
+    private double shipping;
+
+    @Column(columnDefinition = "Decimal(64,2) default 0")
+    private double total;
+
+    private boolean isPayed;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentType;
+
+    @Column(name = "created_time")
+    private ZonedDateTime createdTime;
+
+    @Column(name = "payment_time")
+    private ZonedDateTime paymentTime;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
+    private String paypalPaymentId;
+
+    private String momoPaymentId;
+
+    private String cashPaymentId;
+}

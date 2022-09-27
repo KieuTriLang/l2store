@@ -11,7 +11,9 @@ import lombok.Data;
 @Data
 public class UserDto {
 
-    private String displayName;
+    private String firstName;
+
+    private String lastName;
 
     private boolean gender;
 

@@ -38,8 +38,6 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktl.l2store.common.RegisterForm;
-import com.ktl.l2store.dto.ComboProductDto;
-import com.ktl.l2store.dto.ProductOverviewDto;
 import com.ktl.l2store.dto.UserDto;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Role;
@@ -93,7 +91,8 @@ public class UserApi {
 
         User user = User.builder()
                 .username(username)
-                .displayName(reqUserDto.getDisplayName())
+                .firstName(reqUserDto.getFirstName())
+                .lastName(reqUserDto.getLastName())
                 .gender(reqUserDto.isGender())
                 .address(reqUserDto.getAddress())
                 .dob(reqUserDto.getDob())
@@ -118,7 +117,6 @@ public class UserApi {
         User newUser = User.builder()
                 .id(null)
                 .username(form.getUsername())
-                .displayName(form.getUsername())
                 .email("")
                 .password(form.getPassword())
                 .gender(true)
@@ -127,7 +125,7 @@ public class UserApi {
                 .dob(ZonedDateTime.now(ZoneId.of("Z")))
                 .roles(new ArrayList<>())
                 .favProducts(new ArrayList<>())
-                .bills(new ArrayList<>())
+                .orders(new ArrayList<>())
                 .comboProducts(new ArrayList<>())
                 .updatedAt(ZonedDateTime.now(ZoneId.of("Z"))).build();
 
@@ -154,24 +152,6 @@ public class UserApi {
 
         userService.removeRoleFromUser(username, roleName);
 
-    }
-
-    // get list fav product
-    @RequestMapping(value = "/fav-products", method = RequestMethod.GET)
-    public ResponseEntity<Object> getFavProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
-        String username = AuthorizationHeader.getSub(authorizationHeader);
-        List<ProductOverviewDto> productOverviewDtos = userService.getFavProducts(username).stream()
-                .map(item -> mapper.map(item, ProductOverviewDto.class)).toList();
-        return ResponseEntity.ok().body(productOverviewDtos);
-    }
-
-    // get list combo product
-    @RequestMapping(value = "/cb-products", method = RequestMethod.GET)
-    public ResponseEntity<Object> getCbProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
-        String username = AuthorizationHeader.getSub(authorizationHeader);
-        List<ComboProductDto> cbProductDtos = userService.getCbProducts(username).stream()
-                .map(item -> mapper.map(item, ComboProductDto.class)).toList();
-        return ResponseEntity.ok().body(cbProductDtos);
     }
 
     // Refresh token

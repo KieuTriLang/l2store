@@ -13,7 +13,7 @@ import com.ktl.l2store.service.Category.CategoryService;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @RestController
-@RequestMapping("/api/category")
+@RequestMapping("/api/categories")
 public class CategoryApi {
 
     @Autowired

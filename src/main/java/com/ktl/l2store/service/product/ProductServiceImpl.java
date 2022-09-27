@@ -67,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ItemNotfoundException("Not found product"));
         record.setName(product.getName());
         record.setOverview(product.getOverview());
-        record.setDescription(product.getDescription());
+        record.setDetail(product.getDetail());
         record.setPrice(product.getPrice());
         record.setCategories(product.getCategories());
         record.getImage().setData(product.getImage().getData());

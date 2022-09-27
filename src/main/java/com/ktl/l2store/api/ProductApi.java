@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,13 +30,9 @@ import com.ktl.l2store.entity.Evaluate;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.provider.AuthorizationHeader;
-import com.ktl.l2store.provider.PageReqBuilder;
 import com.ktl.l2store.service.Evaluate.EvaluateService;
 import com.ktl.l2store.service.product.ProductService;
-
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import com.ktl.l2store.utils.PagingParam;
 
 @RestController
 @RequestMapping("/api/products")
@@ -52,12 +51,10 @@ public class ProductApi {
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<Object> getAll(
             @RequestPart(name = "filter", required = false) ProductFilterProps filterProps,
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(name = "limited", required = false, defaultValue = "12") Integer limited,
-            @RequestParam(name = "sortTar", required = false, defaultValue = "locked") String sortTar,
-            @RequestParam(name = "sortDir", required = false, defaultValue = "desc") String sortDir) {
+            @PagingParam Pageable pageable) {
 
-        Pageable pageable = PageReqBuilder.createReq(page, limited - 1, sortTar, sortDir);
+        // Pageable pageable = PageReqBuilder.createReq(page, limited - 1, sortTar,
+        // sortDir);
 
         Page<Product> products = filterProps == null ? productService.getProducts(pageable)
                 : productService.getProductsWithFilter(filterProps, pageable);
@@ -99,7 +96,7 @@ public class ProductApi {
         Product product = Product.builder()
                 .name(reqProduct.getName())
                 .overview(reqProduct.getOverview())
-                .description(reqProduct.getDescription())
+                .detail(reqProduct.getDetail())
                 .price(reqProduct.getPrice())
                 .categories(reqProduct.getCategories())
                 .evaluates(new ArrayList<>())
@@ -126,7 +123,7 @@ public class ProductApi {
                 .id(reqProduct.getId())
                 .name(reqProduct.getName())
                 .overview(reqProduct.getOverview())
-                .description(reqProduct.getDescription())
+                .detail(reqProduct.getDetail())
                 .price(reqProduct.getPrice())
                 .categories(reqProduct.getCategories())
                 .build();
@@ -136,9 +133,9 @@ public class ProductApi {
                     reqProduct.getName(), file.getContentType()));
         }
 
-        Product newProduct = productService.updateProduct(product);
+        Product updatedProduct = productService.updateProduct(product);
 
-        ProductDetailDto productDetailDto = mapper.map(newProduct, ProductDetailDto.class);
+        ProductDetailDto productDetailDto = mapper.map(updatedProduct, ProductDetailDto.class);
 
         return ResponseEntity.ok().body(productDetailDto);
     }
@@ -146,12 +143,10 @@ public class ProductApi {
     // Get evaluates
     @RequestMapping(value = "/{id}/evaluates", method = RequestMethod.GET)
     public ResponseEntity<Object> getEvaluate(@PathVariable Long id,
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(name = "limited", required = false, defaultValue = "12") Integer limited,
-            @RequestParam(name = "sortTar", required = false, defaultValue = "postedTime") String sortTar,
-            @RequestParam(name = "sortDir", required = false, defaultValue = "desc") String sortDir) {
+            @PagingParam(sortTar = "postedTime", sortDir = "desc") Pageable pageable) {
 
-        Pageable pageable = PageReqBuilder.createReq(page, limited, sortTar, sortDir);
+        // Pageable pageable = PageReqBuilder.createReq(page, limited, sortTar,
+        // sortDir);
 
         Page<Evaluate> evaluates = evaluateService.getEvaluateByProduct(id, pageable);
 

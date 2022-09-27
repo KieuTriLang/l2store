@@ -2,22 +2,7 @@ package com.ktl.l2store.entity;
 
 import java.util.Collection;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.PostUpdate;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import javax.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Data
+@Table(name = "products")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +24,7 @@ public class Product {
 
     private String overview;
 
-    private String description;
+    private String detail;
 
     @OneToOne(cascade = CascadeType.ALL)
     private FileDB image;
@@ -48,8 +34,7 @@ public class Product {
     @ManyToMany(fetch = FetchType.EAGER)
     private Collection<Category> categories;
 
-    @OneToMany()
-    @Fetch(FetchMode.SUBSELECT)
+    @OneToMany
     private Collection<Evaluate> evaluates;
 
     @Column(name = "total_purchases", columnDefinition = "integer default 0")
