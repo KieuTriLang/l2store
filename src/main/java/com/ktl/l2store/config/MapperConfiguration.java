@@ -46,7 +46,7 @@ public class MapperConfiguration {
 
                                         @Override
                                         protected void configure() {
-                                                // TODO Auto-generated method stub
+
                                                 map().setUserName(source.getUser().getUsername());
                                                 map().setAvatarUri(
                                                                 source.getUser().getAvatar().getFileCode().toString());

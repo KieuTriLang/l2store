@@ -48,7 +48,7 @@ public class ProductApi {
     private ModelMapper mapper;
 
     // Get list product
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getAll(
             @RequestPart(name = "filter", required = false) ProductFilterProps filterProps,
             @PagingParam Pageable pageable) {
@@ -171,9 +171,15 @@ public class ProductApi {
 
     // Update evaluate
     @RequestMapping(value = "/evaluates", method = RequestMethod.PUT)
-    public ResponseEntity<Object> updateEvaluate(@RequestBody Evaluate evaluate) {
+    public ResponseEntity<Object> updateEvaluate(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestBody EvaluateDto evaluateDto) {
 
-        evaluateService.updateEvaluate(evaluate);
+        String username = AuthorizationHeader.getSub(authorizationHeader);
+
+        Evaluate evaluate = Evaluate.builder().id(evaluateDto.getId()).star(evaluateDto.getStar())
+                .content(evaluateDto.getContent()).build();
+
+        evaluateService.updateEvaluate(username, evaluate);
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }

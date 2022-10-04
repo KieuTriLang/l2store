@@ -51,4 +51,14 @@ public class ApiExceptionHanlder {
         return new ResponseEntity<>(apiException, badRequest);
     }
 
+    @ExceptionHandler(value = { CommonException.class })
+    public ResponseEntity<Object> commonException(CommonException exception) {
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+        ApiException apiException = new ApiException(
+                badRequest,
+                exception.getMessage(),
+                ZonedDateTime.now(ZoneId.of("Z")));
+        return new ResponseEntity<>(apiException, badRequest);
+    }
+
 }

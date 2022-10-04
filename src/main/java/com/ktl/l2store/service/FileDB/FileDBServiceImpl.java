@@ -15,7 +15,7 @@ public class FileDBServiceImpl implements FileDBService {
 
     @Override
     public FileDB getImageByFileCode(Long fileCode) {
-        // TODO Auto-generated method stub
+
         FileDB file = fileDBRepo.findByFileCode(fileCode)
                 .orElseThrow(() -> new ItemNotfoundException("Not found file"));
         return file;

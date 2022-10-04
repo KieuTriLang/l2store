@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order createOrder(String username, ReqOrderDto reqOrderDto) {
-        // TODO Auto-generated method stub
+
         User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
 
         Order order = new Order();
@@ -92,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void addPaypalPaymentId(Long id, String paypalPaymentId) {
-        // TODO Auto-generated method stub
+
         Order order = orderRepo.getById(id);
         order.setPaypalPaymentId(paypalPaymentId);
         orderRepo.save(order);
@@ -107,19 +107,19 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<Order> getAll(Pageable pageable) {
-        // TODO Auto-generated method stub
+
         return orderRepo.findAll(pageable);
     }
 
     @Override
     public Page<Order> getByOwnerUsername(String username, Pageable pageable) {
-        // TODO Auto-generated method stub
+
         return orderRepo.findByOwnerUsername(username, pageable);
     }
 
     @Override
     public Order getById(Long id) {
-        // TODO Auto-generated method stub
+
         return orderRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Order is not exist!"));
     }
 }

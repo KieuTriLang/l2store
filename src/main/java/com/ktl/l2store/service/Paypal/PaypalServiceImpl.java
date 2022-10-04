@@ -36,7 +36,7 @@ public class PaypalServiceImpl implements PaypalService {
 
     @Override
     public Payment authorizePayment(User user, Order order) throws PayPalRESTException {
-        // TODO Auto-generated method stub
+
         Payer payer = getPayerInformation(user);
         RedirectUrls redirectUrls = getRedirectURLs();
         List<Transaction> listTransaction = getTransactionInformation(order);
@@ -56,7 +56,7 @@ public class PaypalServiceImpl implements PaypalService {
 
     @Override
     public Payment getPaymentDetails(String paymentId) throws PayPalRESTException {
-        // TODO Auto-generated method stub
+
         APIContext apiContext = new APIContext(CLIENT_ID, CLIENT_SECRET, MODE);
         return Payment.get(apiContext, paymentId);
     }

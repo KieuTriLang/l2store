@@ -19,7 +19,7 @@ public class CategoryApi {
     @Autowired
     private CategoryService categoryService;
 
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getAll() {
         return ResponseEntity.ok().body(categoryService.getAll());
     }

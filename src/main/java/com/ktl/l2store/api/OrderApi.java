@@ -56,7 +56,7 @@ public class OrderApi {
     private ModelMapper modelMapper;
 
     // Get all
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getAll(@PagingParam Pageable pageable) {
         return ResponseEntity.ok().build();
     }

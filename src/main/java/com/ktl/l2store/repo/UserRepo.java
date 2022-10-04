@@ -12,6 +12,8 @@ import com.ktl.l2store.entity.User;
 @Repository
 public interface UserRepo extends JpaRepository<User, Long> {
 
+    Page<User> findAll(Pageable pageable);
+
     Page<User> findByUsernameContaining(String username, Pageable pageable);
 
     Optional<User> findByUsername(String username);

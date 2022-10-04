@@ -35,7 +35,7 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
         @Override
         public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
                         throws AuthenticationException {
-                // TODO Auto-generated method stub
+
                 String username = request.getParameter("username");
                 String password = request.getParameter("password");
                 log.info("username: {} - password: {}", username, password);
@@ -49,7 +49,7 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
         protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                         FilterChain chain,
                         Authentication authentication) throws IOException, ServletException {
-                // TODO Auto-generated method stub
+
                 User user = (User) authentication.getPrincipal();
                 Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
                 String access_token = JWT.create()

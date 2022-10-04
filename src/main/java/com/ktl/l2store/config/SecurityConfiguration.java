@@ -2,6 +2,7 @@ package com.ktl.l2store.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,46 +23,59 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private final UserDetailsService userDetailsService;
+        private final UserDetailsService userDetailsService;
 
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+        private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        // TODO Auto-generated method stub
-        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
-    }
+        @Override
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        // TODO Auto-generated method stub
-        CustomAuthenticaionFilter customAuthenticaionFilter = new CustomAuthenticaionFilter(
-                authenticationManagerBean());
-        customAuthenticaionFilter.setFilterProcessesUrl("/api/login");
+                auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
+        }
 
-        http.csrf().disable();
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
 
-        http.authorizeRequests().antMatchers("/api/login/**", "/api/user/token/refresh/**", "/api/user/register/**")
-                .permitAll();
-        // User
-        http.authorizeRequests().antMatchers("/api/users/all/**", "/api/users/like-name").permitAll();
-        http.authorizeRequests().antMatchers("/api/users/**").hasAnyAuthority("ROLE_USER");
-        // Image
-        http.authorizeRequests().antMatchers("/api/file/**").permitAll();
-        http.authorizeRequests().antMatchers("/api/file/download/**").authenticated();
+                CustomAuthenticaionFilter customAuthenticaionFilter = new CustomAuthenticaionFilter(
+                                authenticationManagerBean());
+                customAuthenticaionFilter.setFilterProcessesUrl("/api/login");
 
-        http.authorizeRequests().anyRequest().authenticated();
+                http.csrf().disable();
+                http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
-        http.addFilter(customAuthenticaionFilter);
-        http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
-    }
+                http.authorizeRequests()
+                                .antMatchers("/api/login/**", "/api/user/token/refresh/**", "/api/user/register/**")
+                                .permitAll();
+                // User
+                http.authorizeRequests()
+                                .antMatchers("/api/users/").permitAll()
+                                // .antMatchers("/api/users/").hasAnyAuthority("ROLE_SUPER_ADMIN")
+                                .antMatchers("/api/users/role/**").hasAnyAuthority("ROLE_SUPER_ADMIN")
+                                .antMatchers(HttpMethod.GET, "/api/users/**").permitAll();
 
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        // TODO Auto-generated method stub
-        return super.authenticationManagerBean();
-    }
+                // Product
+                http.authorizeRequests()
+                                .antMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                                .antMatchers(HttpMethod.POST, "/api/products/**/evaluates/**").hasAnyAuthority(
+                                                "ROLE_SUPER_ADMIN")
+                                .antMatchers("/api/products/**").hasAnyAuthority("ROLE_SUPER_ADMIN");
+
+                // Image
+                http.authorizeRequests()
+                                .antMatchers("/api/file/**").permitAll()
+                                .antMatchers("/api/file/download/**").authenticated();
+
+                http.authorizeRequests().anyRequest().authenticated();
+
+                http.addFilter(customAuthenticaionFilter);
+                http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+        }
+
+        @Bean
+        @Override
+        public AuthenticationManager authenticationManagerBean() throws Exception {
+
+                return super.authenticationManagerBean();
+        }
 
 }

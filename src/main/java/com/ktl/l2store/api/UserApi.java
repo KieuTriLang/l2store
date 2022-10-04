@@ -16,6 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -45,6 +48,7 @@ import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemNotfoundException;
 import com.ktl.l2store.provider.AuthorizationHeader;
 import com.ktl.l2store.service.user.UserService;
+import com.ktl.l2store.utils.PagingParam;
 
 import lombok.RequiredArgsConstructor;
 
@@ -59,18 +63,19 @@ public class UserApi {
     @Autowired
     private ModelMapper mapper;
 
-    // Get all info user
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    // Get all user or search
+    @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getUsers(
             @RequestParam(name = "search", required = false) String keyword,
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(name = "limited", required = false, defaultValue = "12") Integer limited,
-            @RequestParam(name = "sortTar", required = false, defaultValue = "id") String sortTar,
-            @RequestParam(name = "sortDir", required = false, defaultValue = "asc") String sortDir) {
+            @PagingParam Pageable pageable) {
 
-        List<UserDto> userDtos = userService.getUsers().stream().map(i -> mapper.map(i, UserDto.class)).toList();
+        Page<User> users = userService.getUsers(pageable);
 
-        return ResponseEntity.status(HttpStatus.OK).body(userDtos);
+        List<UserDto> userDtos = users.stream().map(u -> mapper.map(u, UserDto.class)).toList();
+
+        Page<UserDto> resPageDto = new PageImpl<>(userDtos, pageable, users.getTotalElements());
+
+        return ResponseEntity.status(HttpStatus.OK).body(resPageDto);
     }
 
     // Get user by user name
@@ -129,7 +134,11 @@ public class UserApi {
                 .comboProducts(new ArrayList<>())
                 .updatedAt(ZonedDateTime.now(ZoneId.of("Z"))).build();
 
-        UserDto userDto = mapper.map(userService.saveUser(newUser), UserDto.class);
+        User user = userService.saveUser(newUser);
+
+        userService.addRoleToUser(user.getUsername(), "ROLE_USER");
+
+        UserDto userDto = mapper.map(user, UserDto.class);
 
         return new ResponseEntity<>(userDto, HttpStatus.CREATED);
     }

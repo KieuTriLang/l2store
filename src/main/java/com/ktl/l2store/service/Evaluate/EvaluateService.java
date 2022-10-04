@@ -13,5 +13,5 @@ public interface EvaluateService {
 
     void addEvaluateToProduct(Long pId, String username, Evaluate evaluate);
 
-    Evaluate updateEvaluate(Evaluate evaluate);
+    Evaluate updateEvaluate(String username, Evaluate evaluate);
 }

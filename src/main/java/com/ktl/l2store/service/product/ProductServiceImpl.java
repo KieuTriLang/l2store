@@ -23,19 +23,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<Product> getProducts(Pageable pageable) {
-        // TODO Auto-generated method stub
+
         return productRepo.findAll(pageable);
     }
 
     @Override
     public Page<Product> getProductsExceptLocked(Pageable pageable) {
-        // TODO Auto-generated method stub
+
         return productRepo.findAllByLockedFalse(pageable);
     }
 
     @Override
     public Page<Product> getProductsWithFilter(ProductFilterProps filterProps, Pageable pageable) {
-        // TODO Auto-generated method stub
+
         String name = filterProps.getNameProduct();
         List<String> ctgs = filterProps.getCategoryNames();
         int star = filterProps.getStar();
@@ -50,19 +50,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getProduct(Long id) throws ItemNotfoundException {
-        // TODO Auto-generated method stub
+
         return productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Not found product"));
     }
 
     @Override
     public Product saveProduct(Product product) {
-        // TODO Auto-generated method stub
+
         return productRepo.save(product);
     }
 
     @Override
     public Product updateProduct(Product product) {
-        // TODO Auto-generated method stub
+
         Product record = productRepo.findById(product.getId())
                 .orElseThrow(() -> new ItemNotfoundException("Not found product"));
         record.setName(product.getName());
@@ -76,7 +76,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void changeLocked(Long id) {
-        // TODO Auto-generated method stub
+
         Product product = productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Not found product"));
         product.setLocked(!product.isLocked());
     }
