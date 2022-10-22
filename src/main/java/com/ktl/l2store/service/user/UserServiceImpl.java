@@ -41,11 +41,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
         log.info("");
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new ItemNotfoundException("Not found user: " + username));
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ItemNotfoundException("Not found user"));
 
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
@@ -60,6 +60,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         if (userRepo.existsUserByUsername(user.getUsername()))
             throw new ItemExistException("Username is exist");
+        if (userRepo.existsUserByEmail(user.getEmail()))
+            throw new ItemExistException("Email is exist");
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepo.save(user);
     }

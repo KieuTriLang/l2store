@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktl.l2store.common.ProductFilterProps;
 import com.ktl.l2store.dto.EvaluateDto;
 import com.ktl.l2store.dto.ProductDetailDto;
@@ -30,9 +34,11 @@ import com.ktl.l2store.entity.Evaluate;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.provider.AuthorizationHeader;
+import com.ktl.l2store.service.Category.CategoryService;
 import com.ktl.l2store.service.Evaluate.EvaluateService;
 import com.ktl.l2store.service.product.ProductService;
 import com.ktl.l2store.utils.PagingParam;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/products")
@@ -45,17 +51,38 @@ public class ProductApi {
     private EvaluateService evaluateService;
 
     @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
     private ModelMapper mapper;
 
     // Get list product
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getAll(
-            @RequestPart(name = "filter", required = false) ProductFilterProps filterProps,
-            @PagingParam Pageable pageable) {
+            @RequestParam(name = "filter", required = false) String filter,
+            @PagingParam Pageable pageable) throws JsonMappingException, JsonProcessingException {
 
         // Pageable pageable = PageReqBuilder.createReq(page, limited - 1, sortTar,
         // sortDir);
+        ProductFilterProps filterProps = null;
+        if (filter != null) {
 
+            filterProps = new ObjectMapper().readValue(filter, ProductFilterProps.class);
+
+            List<String> categoryNames = filterProps.getCategoryNames();
+            filterProps.setCategoryNames(categoryNames.size() > 0 ? categoryNames
+                    : categoryService.getAll().stream().map(c -> c.getName()).toList());
+
+            double priceStart = filterProps.getPriceStart();
+            double priceEnd = filterProps.getPriceEnd();
+            if (priceStart > priceEnd) {
+                double temp = priceStart;
+                priceStart = priceEnd;
+                priceEnd = temp;
+            }
+            filterProps.setPriceStart(priceStart <= 0 ? 0 : priceStart);
+            filterProps.setPriceEnd(priceEnd <= 0 || priceEnd > 9_999_999 ? 9_999_999 : priceEnd);
+        }
         Page<Product> products = filterProps == null ? productService.getProducts(pageable)
                 : productService.getProductsWithFilter(filterProps, pageable);
 
@@ -89,22 +116,27 @@ public class ProductApi {
     }
 
     // Add
-    @RequestMapping(value = "/add", method = RequestMethod.POST)
-    public ResponseEntity<Object> add(@RequestPart ProductDetailDto reqProduct,
+    @RequestMapping(value = "/add", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Object> add(@RequestPart String bodyProduct,
             @RequestPart(required = false) MultipartFile file) throws IOException {
 
+        ProductDetailDto reqProduct = new ObjectMapper().readValue(bodyProduct, ProductDetailDto.class);
         Product product = Product.builder()
                 .name(reqProduct.getName())
                 .overview(reqProduct.getOverview())
                 .detail(reqProduct.getDetail())
+                .image(new FileDB(null, Calendar.getInstance().getTimeInMillis(), null, null, null))
                 .price(reqProduct.getPrice())
                 .categories(reqProduct.getCategories())
+                .salesoff(reqProduct.getSalesoff())
+                .averageRate(5)
                 .evaluates(new ArrayList<>())
                 .build();
 
         if (file != null) {
-            product.setImage(new FileDB(null, Calendar.getInstance().getTimeInMillis(), file.getBytes(),
-                    reqProduct.getName(), file.getContentType()));
+            product.getImage().setData(file.getBytes());
+            product.getImage().setName(file.getName());
+            product.getImage().setType(file.getContentType());
         }
 
         Product newProduct = productService.saveProduct(product);
@@ -115,10 +147,11 @@ public class ProductApi {
     }
 
     // Update
-    @RequestMapping(value = "/update", method = RequestMethod.PUT)
-    public ResponseEntity<Object> update(@RequestPart ProductDetailDto reqProduct, @RequestPart MultipartFile file)
+    @RequestMapping(value = "/update", method = RequestMethod.PUT, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Object> update(@RequestPart String bodyProduct,
+            @RequestPart(required = false) MultipartFile file)
             throws IOException {
-
+        ProductDetailDto reqProduct = new ObjectMapper().readValue(bodyProduct, ProductDetailDto.class);
         Product product = Product.builder()
                 .id(reqProduct.getId())
                 .name(reqProduct.getName())
@@ -126,6 +159,7 @@ public class ProductApi {
                 .detail(reqProduct.getDetail())
                 .price(reqProduct.getPrice())
                 .categories(reqProduct.getCategories())
+                .salesoff(reqProduct.getSalesoff())
                 .build();
 
         if (file != null) {
@@ -138,6 +172,12 @@ public class ProductApi {
         ProductDetailDto productDetailDto = mapper.map(updatedProduct, ProductDetailDto.class);
 
         return ResponseEntity.ok().body(productDetailDto);
+    }
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<Object> deteleProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     // Get evaluates

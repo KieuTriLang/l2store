@@ -1,6 +1,9 @@
 package com.ktl.l2store.api;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -86,6 +89,15 @@ public class UserApi {
         return ResponseEntity.status(HttpStatus.OK).body(userDto);
     }
 
+    // Get user by user name
+    @RequestMapping(value = "/profile", method = RequestMethod.GET)
+    public ResponseEntity<Object> getProfile(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader)
+            throws ItemNotfoundException {
+        String username = AuthorizationHeader.getSub(authorizationHeader);
+        UserDto userDto = mapper.map(userService.getUser(username), UserDto.class);
+        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+    }
+
     // Update user
     @RequestMapping(value = "/update", method = RequestMethod.PUT, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateUser(
@@ -107,25 +119,23 @@ public class UserApi {
                     new FileDB(null, null, file.getBytes(), "avatar", file.getContentType()));
         }
 
-        // mapper.getTypeMap(User.class, UserDto.class).addMapping(u ->
-        // u.getAvatar().getFileCode(),
-        // UserDto::setAvatarUri);
-
         return ResponseEntity.status(HttpStatus.OK).body(mapper.map(userService.updateUser(user), UserDto.class));
 
     }
 
     // Register user
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public ResponseEntity<Object> register(@RequestBody RegisterForm form) {
+    public ResponseEntity<Object> register(@RequestBody RegisterForm form) throws IOException {
 
+        Path path = new File("src\\main\\java\\com\\ktl\\l2store\\avatar.jpg").toPath();
         User newUser = User.builder()
                 .id(null)
                 .username(form.getUsername())
-                .email("")
+                .email(form.getEmail())
                 .password(form.getPassword())
                 .gender(true)
-                .avatar(new FileDB(null, Calendar.getInstance().getTimeInMillis(), null, null, null))
+                .avatar(new FileDB(null, Calendar.getInstance().getTimeInMillis(), Files.readAllBytes(path), null,
+                        Files.probeContentType(path)))
                 .address("")
                 .dob(ZonedDateTime.now(ZoneId.of("Z")))
                 .roles(new ArrayList<>())
@@ -137,6 +147,8 @@ public class UserApi {
         User user = userService.saveUser(newUser);
 
         userService.addRoleToUser(user.getUsername(), "ROLE_USER");
+
+        user = userService.getUser(user.getUsername());
 
         UserDto userDto = mapper.map(user, UserDto.class);
 

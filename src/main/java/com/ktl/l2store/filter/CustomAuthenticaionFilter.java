@@ -36,11 +36,11 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
         public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
                         throws AuthenticationException {
 
-                String username = request.getParameter("username");
+                String email = request.getParameter("email");
                 String password = request.getParameter("password");
-                log.info("username: {} - password: {}", username, password);
+                log.info("username: {} - password: {}", email, password);
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                                username,
+                                email,
                                 password);
                 return authenticationManager.authenticate(authenticationToken);
         }
@@ -70,6 +70,13 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
                 tokens.put("refresh_token", refresh_token);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+        }
+
+        @Override
+        protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+                        AuthenticationException failed) throws IOException, ServletException {
+                // TODO Auto-generated method stub
+                super.unsuccessfulAuthentication(request, response, failed);
         }
 
 }

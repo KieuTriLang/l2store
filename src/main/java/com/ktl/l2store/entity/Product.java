@@ -22,12 +22,16 @@ public class Product {
 
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String overview;
 
+    @Column(columnDefinition = "TEXT")
     private String detail;
 
     @OneToOne(cascade = CascadeType.ALL)
     private FileDB image;
+
+    private int salesoff;
 
     private double price;
 
@@ -55,7 +59,7 @@ public class Product {
 
     @PostUpdate
     public void postUpdate() {
-        if (this.getEvaluates().size() > 50) {
+        if (this.getEvaluates() != null && this.getEvaluates().size() > 50) {
             this.averageRate = this.getEvaluates().stream().mapToInt(e -> e.getStar()).average().orElse(5);
         }
     }

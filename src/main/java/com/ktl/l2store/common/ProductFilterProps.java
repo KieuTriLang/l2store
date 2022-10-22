@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class ProductFilterProps {
 
-    private String nameProduct;
+    private String name;
 
     private List<String> categoryNames;
 
@@ -22,6 +22,4 @@ public class ProductFilterProps {
     private double priceStart;
 
     private double priceEnd;
-
-    private boolean locked;
 }

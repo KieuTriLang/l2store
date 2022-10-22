@@ -28,14 +28,16 @@ public class ComboProduct {
 
     private String description;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @Fetch(FetchMode.SUBSELECT)
     private Collection<Product> products;
+
+    private int salesoff;
 
     private double totalPrice;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @JoinColumn(name = "owner_id", nullable = true)
     private User owner;
 
     @Column(name = "created_time")

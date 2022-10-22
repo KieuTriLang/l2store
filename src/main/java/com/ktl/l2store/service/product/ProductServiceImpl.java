@@ -1,15 +1,20 @@
 package com.ktl.l2store.service.product;
 
+import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ktl.l2store.common.ProductFilterProps;
+import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.exception.ItemNotfoundException;
+import com.ktl.l2store.repo.FileDBRepo;
 import com.ktl.l2store.repo.ProductRepo;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +25,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepo productRepo;
+    @Autowired
+    private FileDBRepo fileDBRepo;
 
     @Override
     public Page<Product> getProducts(Pageable pageable) {
@@ -36,16 +43,15 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<Product> getProductsWithFilter(ProductFilterProps filterProps, Pageable pageable) {
 
-        String name = filterProps.getNameProduct();
+        String name = filterProps.getName();
         List<String> ctgs = filterProps.getCategoryNames();
         int star = filterProps.getStar();
         double priceStart = filterProps.getPriceStart();
         double priceEnd = filterProps.getPriceEnd();
-        boolean locked = filterProps.isLocked();
 
         return productRepo
-                .findByNameContainingAndCategoriesNameInAndAverageRateGreaterThanEqualAndPriceBetweenAndLocked(name,
-                        ctgs, star, priceStart, priceEnd, locked, pageable);
+                .findWithFilter(name,
+                        ctgs, star, priceStart, priceEnd, pageable);
     }
 
     @Override
@@ -70,7 +76,13 @@ public class ProductServiceImpl implements ProductService {
         record.setDetail(product.getDetail());
         record.setPrice(product.getPrice());
         record.setCategories(product.getCategories());
-        record.getImage().setData(product.getImage().getData());
+        record.setSalesoff(product.getSalesoff());
+        if (product.getImage() != null) {
+
+            record.getImage().setData(product.getImage().getData());
+            record.getImage().setName(product.getImage().getName());
+            record.getImage().setType(product.getImage().getType());
+        }
         return productRepo.save(record);
     }
 
@@ -79,6 +91,33 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Not found product"));
         product.setLocked(!product.isLocked());
+    }
+
+    @Override
+    public boolean addImage(Long id, MultipartFile file) throws IOException {
+        // TODO Auto-generated method stub
+
+        if (file != null) {
+            // FileDB fileDB = fileDBRepo
+            // .save(new FileDB(id, Calendar.getInstance().getTimeInMillis(),
+            // file.getBytes(), file.getName(),
+            // file.getContentType()));
+            Product product = productRepo.getById(id);
+            product.getImage().setData(file.getBytes());
+            product.getImage().setFileCode(Calendar.getInstance().getTimeInMillis());
+            product.getImage().setName(file.getName());
+            product.getImage().setType(file.getContentType());
+            productRepo.save(product);
+
+        }
+        return true;
+    }
+
+    @Override
+    public void deleteProduct(Long id) {
+        // TODO Auto-generated method stub
+        Product product = productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("not found product"));
+        productRepo.delete(product);
     }
 
 }

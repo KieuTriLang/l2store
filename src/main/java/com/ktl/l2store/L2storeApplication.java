@@ -71,23 +71,11 @@ public class L2storeApplication {
 							.dob(ZonedDateTime.now(ZoneId.of("Z")))
 							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
 							.build());
-			userService.saveUser(
-					User.builder()
-							.username("user")
-							.password("1234")
-							.gender(true)
-							.email("user@gmail.com")
-							.address("NewYork")
-							.roles(new ArrayList<>())
-							.dob(ZonedDateTime.now(ZoneId.of("Z")))
-							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
-							.build());
 
 			userService.addRoleToUser("superadmin", "ROLE_SUPER_ADMIN");
 			userService.addRoleToUser("superadmin", "ROLE_MANAGER");
 			userService.addRoleToUser("admin", "ROLE_ADMIN");
 			userService.addRoleToUser("manager", "ROLE_MANAGER");
-			userService.addRoleToUser("user", "ROLE_USER");
 		};
 	}
 

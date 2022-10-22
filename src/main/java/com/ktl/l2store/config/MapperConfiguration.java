@@ -6,11 +6,13 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.ktl.l2store.dto.ComboProductDto;
+import com.ktl.l2store.dto.ComboProductDetailDto;
+import com.ktl.l2store.dto.ComboProductOverviewDto;
 import com.ktl.l2store.dto.EvaluateDto;
 import com.ktl.l2store.dto.OrderComboDto;
 import com.ktl.l2store.dto.OrderOverviewDto;
 import com.ktl.l2store.dto.OrderProductDto;
+import com.ktl.l2store.dto.ProductDetailDto;
 import com.ktl.l2store.dto.ProductOverviewDto;
 import com.ktl.l2store.dto.UserDto;
 import com.ktl.l2store.entity.ComboProduct;
@@ -35,10 +37,30 @@ public class MapperConfiguration {
                 modelMapper.createTypeMap(User.class, UserDto.class).addMapping(u -> u.getAvatar().getFileCode(),
                                 UserDto::setAvatarUri);
 
-                // Product - ProductDto
-                modelMapper.createTypeMap(Product.class, ProductOverviewDto.class).addMapping(
-                                p -> p.getImage().getFileCode(),
-                                ProductOverviewDto::setImageUri);
+                // Product - ProductOverviewDto
+                modelMapper.createTypeMap(Product.class, ProductOverviewDto.class)
+                                .addMappings(new PropertyMap<Product, ProductOverviewDto>() {
+
+                                        @Override
+                                        protected void configure() {
+
+                                                map().setSold(source.getTotalPurchases());
+                                                map().setImageUri(source.getImage().getFileCode().toString());
+                                        }
+
+                                });
+                // Product - ProductDetailDto
+                modelMapper.createTypeMap(Product.class, ProductDetailDto.class)
+                                .addMappings(new PropertyMap<Product, ProductDetailDto>() {
+
+                                        @Override
+                                        protected void configure() {
+
+                                                map().setSold(source.getTotalPurchases());
+                                                map().setImageUri(source.getImage().getFileCode().toString());
+                                        }
+
+                                });
 
                 // Evaluate - EvaluateDto
                 modelMapper.createTypeMap(Evaluate.class, EvaluateDto.class)
@@ -54,20 +76,17 @@ public class MapperConfiguration {
 
                                 });
 
-                // ComboProduct - ComboProductDto
-                modelMapper.createTypeMap(ComboProduct.class, ComboProductDto.class)
-                                .addMappings(new PropertyMap<ComboProduct, ComboProductDto>() {
+                // ComboProduct - ComboProductOverviewDto
+                modelMapper.createTypeMap(ComboProduct.class, ComboProductOverviewDto.class)
+                                .addMappings(new PropertyMap<ComboProduct, ComboProductOverviewDto>() {
 
                                         @Override
                                         protected void configure() {
-                                                // map().setCreatorName(source.getCreator().getFirstName());
-                                                // map().setCreatorAvatarUri(
-                                                // source.getCreator().getAvatar().getFileCode()
-                                                // .toString());
-
-                                                map().setProductImages(source.getProducts());
+                                                map().setProductImagesUrl(source.getProducts());
                                         }
                                 });
+                // ComboProduct - ComboProductDetailDto
+                modelMapper.createTypeMap(ComboProduct.class, ComboProductDetailDto.class);
 
                 // Order - OrderOverviewDto
                 // modelMapper.createTypeMap(Order.class, OrderOverviewDto.class)

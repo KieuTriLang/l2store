@@ -1,11 +1,15 @@
 package com.ktl.l2store.service.CbProduct;
 
+import java.util.Collection;
+import java.util.stream.Collector;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.ktl.l2store.common.ComboProductFilterProps;
+import com.ktl.l2store.dto.ReqCbProduct;
 import com.ktl.l2store.entity.ComboProduct;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.User;
@@ -39,7 +43,7 @@ public class ComboProductServiceImpl implements ComboProductService {
         double priceStart = filterProps.getPriceStart();
         double priceEnd = filterProps.getPriceEnd();
 
-        return cbProductRepo.findByNameContainingAndTotalPriceBetween(nameCb, priceStart, priceEnd, pageable);
+        return cbProductRepo.findWithFilter(nameCb, priceStart, priceEnd, pageable);
     }
 
     @Override
@@ -51,45 +55,68 @@ public class ComboProductServiceImpl implements ComboProductService {
     }
 
     @Override
-    public ComboProduct updateCbProduct(ComboProduct comboProduct) {
+    public ComboProduct updateCbProduct(ReqCbProduct reqCbProduct) {
+        Collection<Product> products = reqCbProduct.getProductIds().stream()
+                .map(id -> productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("null")))
+                .toList();
 
-        ComboProduct record = cbProductRepo.findById(comboProduct.getId())
-                .orElseThrow(() -> new ItemNotfoundException("Not found combo"));
-        record.setName(comboProduct.getName());
-        record.setDescription(comboProduct.getDescription());
+        ComboProduct record = cbProductRepo.findById(reqCbProduct.getId())
+                .orElseThrow(() -> new ItemNotfoundException("not found combos"));
+
+        record.setName(reqCbProduct.getName());
+        record.setDescription(reqCbProduct.getDescription());
+        record.setProducts(products);
+        record.setSalesoff(reqCbProduct.getSalesoff());
+        record.setTotalPrice(reqCbProduct.getTotal());
         return cbProductRepo.save(record);
     }
 
     @Override
-    public ComboProduct saveCbProduct(String username, ComboProduct comboProduct) {
+    public ComboProduct createCbProduct(ReqCbProduct reqCbProduct) {
 
-        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
-        comboProduct.setOwner(user);
+        Collection<Product> products = reqCbProduct.getProductIds().stream()
+                .map(id -> Product.builder().id(id).build())
+                .toList();
+
+        ComboProduct comboProduct = ComboProduct.builder().name(reqCbProduct.getName())
+                .description(reqCbProduct.getDescription())
+                .products(products)
+                .salesoff(reqCbProduct.getSalesoff())
+                .totalPrice(reqCbProduct.getTotal())
+                .build();
         return cbProductRepo.save(comboProduct);
     }
 
-    @Override
-    public void addProductToCombo(Long productId, Long cbProductId) {
+    // @Override
+    // public void addProductToCombo(Long productId, Long cbProductId) {
 
-        ComboProduct cbProduct = getCbProductById(cbProductId);
-        Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new ItemNotfoundException("Not found product"));
-        cbProduct.getProducts().add(product);
-    }
+    // ComboProduct cbProduct = getCbProductById(cbProductId);
+    // Product product = productRepo.findById(productId)
+    // .orElseThrow(() -> new ItemNotfoundException("Not found product"));
+    // cbProduct.getProducts().add(product);
+    // }
 
-    @Override
-    public void removeProductFromCombo(Long productId, Long cbProductId) {
+    // @Override
+    // public void removeProductFromCombo(Long productId, Long cbProductId) {
 
-        ComboProduct cbProduct = getCbProductById(cbProductId);
-        Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new ItemNotfoundException("Not found product"));
-        cbProduct.getProducts().remove(product);
-    }
+    // ComboProduct cbProduct = getCbProductById(cbProductId);
+    // Product product = productRepo.findById(productId)
+    // .orElseThrow(() -> new ItemNotfoundException("Not found product"));
+    // cbProduct.getProducts().remove(product);
+    // }
 
     @Override
     public Page<ComboProduct> getCombosByOwner(String ownerName, Pageable pageable) {
 
         return cbProductRepo.findByOwnerUsername(ownerName, pageable);
+    }
+
+    @Override
+    public void deleteCombo(Long id) {
+        // TODO Auto-generated method stub
+        ComboProduct record = cbProductRepo.findById(id)
+                .orElseThrow(() -> new ItemNotfoundException("Not found collection"));
+        cbProductRepo.delete(record);
     }
 
 }

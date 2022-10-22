@@ -1,5 +1,6 @@
 package com.ktl.l2store.api;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -17,8 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktl.l2store.common.ComboProductFilterProps;
-import com.ktl.l2store.dto.ComboProductDto;
+import com.ktl.l2store.dto.ComboProductDetailDto;
+import com.ktl.l2store.dto.ComboProductOverviewDto;
+import com.ktl.l2store.dto.ProductOverviewDto;
+import com.ktl.l2store.dto.ReqCbProduct;
 import com.ktl.l2store.entity.ComboProduct;
 import com.ktl.l2store.provider.AuthorizationHeader;
 import com.ktl.l2store.service.CbProduct.ComboProductService;
@@ -43,44 +50,63 @@ public class ComboProductApi {
     // Get list combo is published
     @RequestMapping(value = "/explore", method = RequestMethod.GET)
     public ResponseEntity<Object> getCbProductsPublished(
-            @RequestPart(name = "filter", required = false) ComboProductFilterProps filterProps,
-            @PagingParam Pageable pageable) {
+            @RequestParam(name = "filter", required = false) String filter,
+            @PagingParam Pageable pageable) throws JsonMappingException, JsonProcessingException {
 
         // Pageable pageable = PageReqBuilder.createReq(page, limited, sortTar,
         // sortDir);
+        ComboProductFilterProps filterProps = null;
+        if (filter != null) {
 
+            filterProps = new ObjectMapper().readValue(filter, ComboProductFilterProps.class);
+
+            double priceStart = filterProps.getPriceStart();
+            double priceEnd = filterProps.getPriceEnd();
+            if (priceStart > priceEnd) {
+                double temp = priceStart;
+                priceStart = priceEnd;
+                priceEnd = temp;
+            }
+            filterProps.setPriceStart(priceStart <= 0 ? 0 : priceStart);
+            filterProps.setPriceEnd(priceEnd <= 0 || priceEnd > 9_999_999 ? 9_999_999 : priceEnd);
+        }
         Page<ComboProduct> cbProducts = filterProps == null ? cbProductService.getCombos(pageable)
                 : cbProductService.getCombosWithFilter(filterProps, pageable);
 
-        List<ComboProductDto> cbProductDtos = cbProducts.stream().map(item -> mapper.map(item, ComboProductDto.class))
+        List<ComboProductOverviewDto> cbProductDtos = cbProducts.stream()
+                .map(item -> mapper.map(item, ComboProductOverviewDto.class))
                 .toList();
 
-        Page<ComboProductDto> resPageDto = new PageImpl<>(cbProductDtos, pageable, cbProducts.getTotalElements());
+        Page<ComboProductOverviewDto> resPageDto = new PageImpl<>(cbProductDtos, pageable,
+                cbProducts.getTotalElements());
 
         return ResponseEntity.ok().body(resPageDto);
     }
 
     // Get list combo of user
-    @RequestMapping(value = "/user", method = RequestMethod.GET)
-    public ResponseEntity<Object> getCbProductsOfUser(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @PagingParam Pageable pageable,
-            @RequestParam(name = "username", required = true) String username) {
+    // @RequestMapping(value = "/user", method = RequestMethod.GET)
+    // public ResponseEntity<Object> getCbProductsOfUser(
+    // @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+    // @PagingParam Pageable pageable,
+    // @RequestParam(name = "username", required = true) String username) {
 
-        // Pageable pageable = PageReqBuilder.createReq(page, limited, sortTar,
-        // sortDir);
+    // // Pageable pageable = PageReqBuilder.createReq(page, limited, sortTar,
+    // // sortDir);
 
-        String sub = AuthorizationHeader.getSub(authorizationHeader);
+    // String sub = AuthorizationHeader.getSub(authorizationHeader);
 
-        Page<ComboProduct> cbProducts = cbProductService.getCombosByOwner(sub, pageable);
+    // Page<ComboProduct> cbProducts = cbProductService.getCombosByOwner(sub,
+    // pageable);
 
-        List<ComboProductDto> cbProductDtos = cbProducts.stream().map(item -> mapper.map(item, ComboProductDto.class))
-                .toList();
+    // List<ComboProductDto> cbProductDtos = cbProducts.stream().map(item ->
+    // mapper.map(item, ComboProductDto.class))
+    // .toList();
 
-        Page<ComboProductDto> resPageDto = new PageImpl<>(cbProductDtos, pageable, cbProducts.getTotalElements());
+    // Page<ComboProductDto> resPageDto = new PageImpl<>(cbProductDtos, pageable,
+    // cbProducts.getTotalElements());
 
-        return ResponseEntity.ok().body(resPageDto);
-    }
+    // return ResponseEntity.ok().body(resPageDto);
+    // }
 
     // Get combo
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
@@ -88,54 +114,58 @@ public class ComboProductApi {
 
         ComboProduct comboProduct = cbProductService.getCbProductById(id);
 
-        ComboProductDto comboProductDto = mapper.map(comboProduct, ComboProductDto.class);
+        Collection<ProductOverviewDto> productOverviewDto = comboProduct.getProducts().stream()
+                .map(cbo -> mapper.map(cbo, ProductOverviewDto.class)).toList();
+
+        ComboProductDetailDto comboProductDto = mapper.map(comboProduct, ComboProductDetailDto.class);
+
+        comboProductDto.setProductOverviews(productOverviewDto);
 
         return ResponseEntity.ok().body(comboProductDto);
     }
 
     // create new combo
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public ResponseEntity<Object> createNewCombo(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @RequestParam("name") String nameCb) {
+    public ResponseEntity<Object> createNewCombo(@RequestBody ReqCbProduct reqCbProduct) {
 
-        String username = AuthorizationHeader.getSub(authorizationHeader);
+        ComboProduct newCbProduct = cbProductService.createCbProduct(reqCbProduct);
 
-        ComboProduct cbProduct = ComboProduct.builder().name(nameCb).build();
-
-        ComboProduct newCbProduct = cbProductService.saveCbProduct(username, cbProduct);
-
-        ComboProductDto cbProductDto = mapper.map(newCbProduct, ComboProductDto.class);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(cbProductDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newCbProduct);
     }
 
     // update combo
     @RequestMapping(value = "/update", method = RequestMethod.PUT)
-    public ResponseEntity<Object> updateCombo(@RequestBody ComboProductDto reqCbProduct) {
-        ComboProduct comboProduct = ComboProduct.builder()
-                .id(reqCbProduct.getId())
-                .name(reqCbProduct.getName())
-                .description(reqCbProduct.getDescription())
-                .build();
-        ComboProduct updatedCbProduct = cbProductService.updateCbProduct(comboProduct);
+    public ResponseEntity<Object> updateCombo(@RequestBody ReqCbProduct reqCbProduct) {
 
-        ComboProductDto cbProductDto = mapper.map(updatedCbProduct, ComboProductDto.class);
-        return ResponseEntity.status(HttpStatus.OK).body(cbProductDto);
+        ComboProduct updatedCbProduct = cbProductService.updateCbProduct(reqCbProduct);
+
+        return ResponseEntity.status(HttpStatus.OK).body(updatedCbProduct);
     }
 
-    // Add product to combo
-    @RequestMapping(value = "/{cbId}/product/{pId}", method = RequestMethod.POST)
-    public ResponseEntity<Object> addProductToCombo(@PathVariable("cbId") Long cbId, @PathVariable("pId") Long pId) {
-        cbProductService.addProductToCombo(pId, cbId);
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<Object> updateCombo(@PathVariable Long id) {
+
+        cbProductService.deleteCombo(id);
+
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    // Remove product to combo
-    @RequestMapping(value = "/{cbId}/product/{pId}", method = RequestMethod.DELETE)
-    public ResponseEntity<Object> removeProductFromCombo(@PathVariable("cbId") Long cbId,
-            @PathVariable("pId") Long pId) {
-        cbProductService.removeProductFromCombo(pId, cbId);
-        return ResponseEntity.status(HttpStatus.OK).build();
-    }
+    // // Add product to combo
+    // @RequestMapping(value = "/{cbId}/product/{pId}", method = RequestMethod.POST)
+    // public ResponseEntity<Object> addProductToCombo(@PathVariable("cbId") Long
+    // cbId, @PathVariable("pId") Long pId) {
+    // cbProductService.addProductToCombo(pId, cbId);
+    // return ResponseEntity.status(HttpStatus.OK).build();
+    // }
+
+    // // Remove product to combo
+    // @RequestMapping(value = "/{cbId}/product/{pId}", method =
+    // RequestMethod.DELETE)
+    // public ResponseEntity<Object> removeProductFromCombo(@PathVariable("cbId")
+    // Long cbId,
+    // @PathVariable("pId") Long pId) {
+    // cbProductService.removeProductFromCombo(pId, cbId);
+    // return ResponseEntity.status(HttpStatus.OK).build();
+    // }
 
 }

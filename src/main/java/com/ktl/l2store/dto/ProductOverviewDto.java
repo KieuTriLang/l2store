@@ -1,5 +1,8 @@
 package com.ktl.l2store.dto;
 
+import java.util.Collection;
+
+import com.ktl.l2store.entity.Category;
 import com.ktl.l2store.provider.URIBuilder;
 
 import lombok.AllArgsConstructor;
@@ -22,7 +25,13 @@ public class ProductOverviewDto {
 
     private int amountOfEvaluate;
 
+    private int salesoff;
+
     private float price;
+
+    private Collection<Category> categories;
+
+    private int sold;
 
     public void setImageUri(String imageCode) {
         this.image = URIBuilder.generate("/api/file/" + imageCode);

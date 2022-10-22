@@ -1,5 +1,6 @@
 package com.ktl.l2store.dto;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import com.ktl.l2store.entity.Product;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class ComboProductDto {
+public class ComboProductOverviewDto {
 
     private Long id;
 
@@ -24,10 +25,12 @@ public class ComboProductDto {
 
     private Collection<String> productImages;
 
+    private int salesoff;
+
     private double totalPrice;
 
-    public void setProductImages(Collection<Product> products) {
-        products.stream()
-                .map(item -> this.productImages.add(URIBuilder.generate("/api/file" + item.getImage().getFileCode())));
+    public void setProductImagesUrl(Collection<Product> products) {
+        this.productImages = products.stream()
+                .map(item -> URIBuilder.generate("/api/file/" + item.getImage().getFileCode())).toList();
     }
 }

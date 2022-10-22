@@ -20,6 +20,8 @@ public class ProductDetailDto {
 
     private String image;
 
+    private int salesoff;
+
     private float price;
 
     private Collection<Category> categories;
@@ -27,6 +29,8 @@ public class ProductDetailDto {
     private double averageRate;
 
     private int amountOfEvaluate;
+
+    private int sold;
 
     public void setImageUri(String imageCode) {
         this.image = URIBuilder.generate("/api/file/" + imageCode);

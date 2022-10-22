@@ -1,7 +1,10 @@
 package com.ktl.l2store.service.product;
 
+import java.io.IOException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ktl.l2store.common.ProductFilterProps;
 import com.ktl.l2store.entity.Product;
@@ -21,5 +24,9 @@ public interface ProductService {
 
     Product updateProduct(Product product);
 
+    void deleteProduct(Long id);
+
     void changeLocked(Long id);
+
+    boolean addImage(Long id, MultipartFile file) throws IOException;
 }
