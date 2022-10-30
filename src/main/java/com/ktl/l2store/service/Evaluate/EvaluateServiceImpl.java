@@ -1,10 +1,14 @@
 package com.ktl.l2store.service.Evaluate;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.ktl.l2store.dto.ReqEvaluate;
 import com.ktl.l2store.entity.Evaluate;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.User;
@@ -41,21 +45,24 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     @Override
-    public void addEvaluateToProduct(Long pId, String username, Evaluate newEvaluate) {
+    public void addEvaluateToProduct(Long pId, String username, ReqEvaluate evaluate) {
 
         Product product = productRepo.findById(pId).orElseThrow(() -> new ItemNotfoundException("Not found product"));
 
         User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
 
-        newEvaluate.setUser(user);
-
-        newEvaluate.setProduct(product);
+        Evaluate newEvaluate = Evaluate.builder().user(user).product(product).star(evaluate.getStar())
+                .content(evaluate.getContent()).postedTime(ZonedDateTime.now(ZoneId.of("Z"))).build();
 
         evaluateRepo.save(newEvaluate);
+
+        product.setAverageRate(
+                evaluateRepo.findByProduct(product).stream().mapToDouble(e -> e.getStar()).average().orElse(5));
+        productRepo.save(product);
     }
 
     @Override
-    public Evaluate updateEvaluate(String username, Evaluate evaluate) {
+    public Evaluate updateEvaluate(String username, ReqEvaluate evaluate) {
 
         Evaluate record = evaluateRepo.findById(evaluate.getId())
                 .orElseThrow(() -> new ItemNotfoundException("Evaluate is not existed"));
@@ -66,8 +73,15 @@ public class EvaluateServiceImpl implements EvaluateService {
 
         record.setContent(evaluate.getContent());
         record.setStar(evaluate.getStar());
+        record.setPostedTime(ZonedDateTime.now(ZoneId.of("Z")));
 
         return evaluateRepo.save(record);
+    }
+
+    @Override
+    public Page<Evaluate> getAll(Pageable pageable) {
+        // TODO Auto-generated method stub
+        return evaluateRepo.findAll(pageable);
     }
 
 }

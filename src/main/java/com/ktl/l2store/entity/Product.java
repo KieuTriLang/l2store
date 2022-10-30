@@ -57,16 +57,7 @@ public class Product {
     @Column(name = "locked", columnDefinition = "boolean default false")
     private boolean locked;
 
-    @PostUpdate
-    public void postUpdate() {
-        if (this.getEvaluates() != null && this.getEvaluates().size() > 50) {
-            this.averageRate = this.getEvaluates().stream().mapToInt(e -> e.getStar()).average().orElse(5);
-        }
+    public void addTotalPurchases(int quantity) {
+        this.totalPurchases += quantity;
     }
-
-    @PostLoad
-    public void postLoad() {
-        this.amountOfEvaluate = this.getEvaluates().size();
-    }
-
 }

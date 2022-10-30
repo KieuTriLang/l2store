@@ -9,17 +9,17 @@ import org.springframework.context.annotation.Configuration;
 import com.ktl.l2store.dto.ComboProductDetailDto;
 import com.ktl.l2store.dto.ComboProductOverviewDto;
 import com.ktl.l2store.dto.EvaluateDto;
-import com.ktl.l2store.dto.OrderComboDto;
+import com.ktl.l2store.dto.OrderDetailDto;
+import com.ktl.l2store.dto.OrderItem;
 import com.ktl.l2store.dto.OrderOverviewDto;
-import com.ktl.l2store.dto.OrderProductDto;
 import com.ktl.l2store.dto.ProductDetailDto;
 import com.ktl.l2store.dto.ProductOverviewDto;
 import com.ktl.l2store.dto.UserDto;
 import com.ktl.l2store.entity.ComboProduct;
 import com.ktl.l2store.entity.Evaluate;
+import com.ktl.l2store.entity.OCombo;
+import com.ktl.l2store.entity.OProduct;
 import com.ktl.l2store.entity.Order;
-import com.ktl.l2store.entity.OrderCombo;
-import com.ktl.l2store.entity.OrderProduct;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.User;
 
@@ -34,9 +34,17 @@ public class MapperConfiguration {
                                 .setSkipNullEnabled(true).setAmbiguityIgnored(true);
 
                 // User - UserDto
-                modelMapper.createTypeMap(User.class, UserDto.class).addMapping(u -> u.getAvatar().getFileCode(),
-                                UserDto::setAvatarUri);
+                modelMapper.createTypeMap(User.class, UserDto.class)
+                                .addMappings(new PropertyMap<User, UserDto>() {
 
+                                        @Override
+                                        protected void configure() {
+
+                                                map().convertDate(source.getDob());
+                                                map().setAvatarUri(source.getAvatar().getFileCode().toString());
+                                        }
+
+                                });
                 // Product - ProductOverviewDto
                 modelMapper.createTypeMap(Product.class, ProductOverviewDto.class)
                                 .addMappings(new PropertyMap<Product, ProductOverviewDto>() {
@@ -70,8 +78,11 @@ public class MapperConfiguration {
                                         protected void configure() {
 
                                                 map().setUserName(source.getUser().getUsername());
+                                                map().setProductName((source.getProduct().getName()));
                                                 map().setAvatarUri(
                                                                 source.getUser().getAvatar().getFileCode().toString());
+                                                map().convertDate(source.getPostedTime());
+
                                         }
 
                                 });
@@ -98,38 +109,47 @@ public class MapperConfiguration {
                 // }
                 // });
 
-                // Order - OrderDetailDto
+                // Order - OrderOverviewDto
                 modelMapper.createTypeMap(Order.class, OrderOverviewDto.class)
                                 .addMappings(new PropertyMap<Order, OrderOverviewDto>() {
                                         @Override
                                         protected void configure() {
-                                                map().setAmountOfCombo(source.getOrderCombos() != null
-                                                                ? source.getOrderCombos().size()
-                                                                : 0);
-                                                map().setAmountOfProduct(source.getOrderProducts() != null
-                                                                ? source.getOrderProducts().size()
-                                                                : 0);
+                                                map().setAmountOfP(source.getOrderProducts());
+                                                map().setAmountOfC(source.getOrderCombos());
+                                                map().setBuyer(source.getOwner().getUsername());
+                                                map().convertCreatedDate(source.getCreatedTime());
+                                                map().convertPaymentDate(source.getPaymentTime());
+                                        }
+                                });
+                // Order - OrderDetailDto
+                modelMapper.createTypeMap(Order.class, OrderDetailDto.class)
+                                .addMappings(new PropertyMap<Order, OrderDetailDto>() {
+                                        @Override
+                                        protected void configure() {
+                                                map().convertCreatedDate(source.getCreatedTime());
+                                                map().convertPaymentDate(source.getPaymentTime());
+                                                map().setPayerName(source.getOwner());
+                                        }
+                                });
+                modelMapper.createTypeMap(OCombo.class, OrderItem.class)
+                                .addMappings(new PropertyMap<OCombo, OrderItem>() {
+                                        @Override
+                                        protected void configure() {
+                                                map().setName(source.getComboProduct().getName());
+                                                map().setPrice(source.getComboProduct().getTotalPrice());
+                                                map().setQuantity(source.getQuantity());
+                                        }
+                                });
+                modelMapper.createTypeMap(OProduct.class, OrderItem.class)
+                                .addMappings(new PropertyMap<OProduct, OrderItem>() {
+                                        @Override
+                                        protected void configure() {
+                                                map().setName(source.getProduct().getName());
+                                                map().setPrice(source.getProduct().getPrice());
+                                                map().setQuantity(source.getQuantity());
                                         }
                                 });
 
-                // OrderProduct - OrderProductDto
-                modelMapper.createTypeMap(OrderProduct.class, OrderProductDto.class)
-                                .addMappings(new PropertyMap<OrderProduct, OrderProductDto>() {
-                                        @Override
-                                        protected void configure() {
-                                                map().setNameProduct(source.getProduct().getName());
-                                                map().setPrice(source.getProduct().getPrice());
-                                        }
-                                });
-                // OrderCombo - OrderComboDto
-                modelMapper.createTypeMap(OrderCombo.class, OrderComboDto.class)
-                                .addMappings(new PropertyMap<OrderCombo, OrderComboDto>() {
-                                        @Override
-                                        protected void configure() {
-                                                map().setNameCombo(source.getComboProduct().getName());
-                                                map().setPrice(source.getComboProduct().getTotalPrice());
-                                        }
-                                });
                 return modelMapper;
         }
 }

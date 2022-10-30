@@ -2,6 +2,8 @@ package com.ktl.l2store.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,11 +20,13 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ktl.l2store.dto.OrderComboDto;
+import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.dto.OrderDetailDto;
+import com.ktl.l2store.dto.OrderItem;
 import com.ktl.l2store.dto.OrderOverviewDto;
-import com.ktl.l2store.dto.OrderProductDto;
 import com.ktl.l2store.dto.PaypalPaymentDto;
+import com.ktl.l2store.dto.PaypalRes;
+import com.ktl.l2store.dto.ReqExcutePayment;
 import com.ktl.l2store.dto.ReqOrderDto;
 import com.ktl.l2store.entity.Order;
 import com.ktl.l2store.entity.User;
@@ -38,6 +43,7 @@ import com.paypal.base.rest.PayPalRESTException;
 
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -58,11 +64,17 @@ public class OrderApi {
     // Get all
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Object> getAll(@PagingParam Pageable pageable) {
-        return ResponseEntity.ok().build();
+        Page<Order> orders = orderService.getAll(pageable);
+
+        List<OrderOverviewDto> orderOverviewDtos = orders.stream()
+                .map(order -> modelMapper.map(order, OrderOverviewDto.class)).toList();
+
+        Page<OrderOverviewDto> resPageDto = new PageImpl<>(orderOverviewDtos, pageable, orders.getTotalElements());
+        return ResponseEntity.ok(resPageDto);
     }
 
     @RequestMapping(value = "/my-orders", method = RequestMethod.GET)
-    public ResponseEntity<Object> getOwnOrde(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+    public ResponseEntity<Object> getOwnOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
             @PagingParam Pageable pageable) {
 
         String username = AuthorizationHeader.getSub(authorizationHeader);
@@ -74,7 +86,7 @@ public class OrderApi {
 
         Page<OrderOverviewDto> resPageDto = new PageImpl<>(orderOverviewDtos, pageable, orders.getTotalElements());
 
-        return ResponseEntity.ok().body(resPageDto);
+        return ResponseEntity.status(HttpStatus.OK).body(resPageDto);
     }
 
     // Get by billcode
@@ -85,11 +97,11 @@ public class OrderApi {
 
         OrderDetailDto orderDetailDto = modelMapper.map(order, OrderDetailDto.class);
 
-        Collection<OrderComboDto> orderComboDtos = order.getOrderCombos().stream()
-                .map(oc -> modelMapper.map(oc, OrderComboDto.class)).toList();
+        Collection<OrderItem> orderComboDtos = order.getOrderCombos().stream()
+                .map(oc -> modelMapper.map(oc, OrderItem.class)).toList();
 
-        Collection<OrderProductDto> orderProductDtos = order.getOrderProducts().stream()
-                .map(op -> modelMapper.map(op, OrderProductDto.class)).toList();
+        Collection<OrderItem> orderProductDtos = order.getOrderProducts().stream()
+                .map(op -> modelMapper.map(op, OrderItem.class)).toList();
 
         orderDetailDto.setOrderCombos(orderComboDtos);
 
@@ -117,7 +129,22 @@ public class OrderApi {
 
             String approvalLink = paymentService.getApprovalLink(approvedPayment);
 
-            return ResponseEntity.status(HttpStatus.FOUND).body(approvalLink);
+            Pattern MY_PATTERN = Pattern.compile("token=EC\\-[a-zA-Z0-9]+");
+
+            Matcher m = MY_PATTERN.matcher(approvalLink);
+            String tokenId = null;
+            while (m.find()) {
+                tokenId = m.group(0);
+                // s now contains "BAR"
+            }
+
+            if (tokenId != null) {
+                tokenId = tokenId.substring(6);
+                order.setTokenId(tokenId);
+                orderService.saveOrder(order);
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(PaypalRes.builder().link(approvalLink).build());
 
         } catch (PayPalRESTException e) {
             // TODO Auto-generated catch block
@@ -127,10 +154,17 @@ public class OrderApi {
         }
     }
 
+    @RequestMapping(value = "/paypal/cancel-payment/{token}", method = RequestMethod.GET)
+    public ResponseEntity<Object> cancelPayment(@PathVariable String token) {
+        orderService.deleteByTokenId(token);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     // paypal review
     @RequestMapping(value = "/paypal/review-payment", method = RequestMethod.GET)
     public ResponseEntity<Object> reviewPayment(@RequestParam("paymentId") String paymentId,
-            @RequestParam("PayerId") String payerId) {
+            @RequestParam("PayerID") String payerId) {
         try {
             Payment payment = paymentService.getPaymentDetails(paymentId);
 
@@ -154,23 +188,14 @@ public class OrderApi {
     }
 
     // paypal excute
-    @RequestMapping(value = "/paypal/excute-payment", method = RequestMethod.GET)
-    public ResponseEntity<Object> excutePayment(@RequestParam("paymentId") String paymentId,
-            @RequestParam("PayerId") String payerId) {
+    @RequestMapping(value = "/paypal/excute-payment", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> excutePayment(@RequestBody ReqExcutePayment req) {
 
         try {
-            Payment payment = paymentService.executePayment(paymentId, payerId);
+            paymentService.executePayment(req.getPaymentId(), req.getPayerId());
+            orderService.updatePayedByPaypalPaymentId(req.getPaymentId(), PaymentType.PAYPAL);
 
-            PayerInfo payerInfo = payment.getPayer().getPayerInfo();
-
-            List<Transaction> transactions = payment.getTransactions();
-
-            PaypalPaymentDto paypalPaymentDto = PaypalPaymentDto.builder()
-                    .payerInfo(payerInfo)
-                    .transactions(transactions)
-                    .build();
-
-            return ResponseEntity.ok(paypalPaymentDto);
+            return ResponseEntity.status(HttpStatus.OK).build();
 
         } catch (PayPalRESTException e) {
             // TODO Auto-generated catch block

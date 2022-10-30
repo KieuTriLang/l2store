@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 @Entity
-@Table(name = "oCombos")
-public class OrderCombo {
+public class OCombo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

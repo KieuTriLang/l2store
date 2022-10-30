@@ -3,13 +3,17 @@ package com.ktl.l2store.service.Paypal;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ktl.l2store.entity.Order;
-import com.ktl.l2store.entity.OrderCombo;
-import com.ktl.l2store.entity.OrderProduct;
+import com.ktl.l2store.entity.OCombo;
+import com.ktl.l2store.entity.OProduct;
 import com.ktl.l2store.entity.User;
+import com.ktl.l2store.repo.OrderRepo;
 import com.paypal.api.payments.Amount;
 import com.paypal.api.payments.Details;
 import com.paypal.api.payments.Item;
@@ -24,6 +28,7 @@ import com.paypal.api.payments.Transaction;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 
+@Transactional
 @Service
 public class PaypalServiceImpl implements PaypalService {
 
@@ -93,9 +98,9 @@ public class PaypalServiceImpl implements PaypalService {
 
         RedirectUrls redirectUrls = new RedirectUrls();
 
-        redirectUrls.setCancelUrl("");
+        redirectUrls.setCancelUrl("http://localhost:4200/my-cart");
 
-        redirectUrls.setReturnUrl("http://localhost:8080/api/orders/paypal/review-payment");
+        redirectUrls.setReturnUrl("http://localhost:4200/my-cart/review-payment");
 
         return redirectUrls;
     }
@@ -105,22 +110,27 @@ public class PaypalServiceImpl implements PaypalService {
         Details details = new Details();
 
         double totalProduct = order.getOrderProducts().stream()
-                .mapToDouble(p -> p.getProduct().getPrice() * p.getQuantity()).sum();
+                .mapToDouble(p -> (p.getProduct().getPrice()
+                        - p.getProduct().getPrice() * p.getProduct().getSalesoff() / 100) * p.getQuantity())
+                .sum();
 
         double totalCombo = order.getOrderCombos().stream()
-                .mapToDouble(cb -> cb.getComboProduct().getTotalPrice() * cb.getQuantity()).sum();
+                .mapToDouble(cb -> (cb.getComboProduct().getTotalPrice()
+                        - cb.getComboProduct().getTotalPrice() * cb.getComboProduct().getSalesoff() / 100)
+                        * cb.getQuantity())
+                .sum();
 
-        String subTotal = Double.toString(totalProduct + totalCombo);
+        String subTotal = String.format("%.2f", totalProduct + totalCombo);
 
         details.setSubtotal(subTotal);
 
-        details.setShipping(Double.toString(order.getShipping()));
+        details.setShipping(String.format("%.2f", order.getShipping()));
 
         Amount amount = new Amount();
 
         amount.setCurrency("USD");
 
-        amount.setTotal(Double.toString(order.getTotal()));
+        amount.setTotal(String.format("%.2f", order.getTotal()));
 
         amount.setDetails(details);
 
@@ -133,7 +143,7 @@ public class PaypalServiceImpl implements PaypalService {
         ItemList itemList = new ItemList();
         List<Item> items = new ArrayList<>();
 
-        for (OrderProduct op : order.getOrderProducts()) {
+        for (OProduct op : order.getOrderProducts()) {
 
             Item item = new Item();
 
@@ -141,14 +151,15 @@ public class PaypalServiceImpl implements PaypalService {
 
             item.setName(op.getProduct().getName());
 
-            item.setPrice(Double.toString(op.getProduct().getPrice()));
+            item.setPrice(String.format("%.2f",
+                    op.getProduct().getPrice() - op.getProduct().getPrice() * op.getProduct().getSalesoff() / 100));
 
             item.setQuantity(Integer.toString(op.getQuantity()));
 
             items.add(item);
         }
 
-        for (OrderCombo oCb : order.getOrderCombos()) {
+        for (OCombo oCb : order.getOrderCombos()) {
 
             Item item = new Item();
 
@@ -156,7 +167,8 @@ public class PaypalServiceImpl implements PaypalService {
 
             item.setName(oCb.getComboProduct().getName());
 
-            item.setPrice(Double.toString(oCb.getComboProduct().getTotalPrice()));
+            item.setPrice(String.format("%.2f", oCb.getComboProduct().getTotalPrice() - oCb.getComboProduct()
+                    .getTotalPrice() * oCb.getComboProduct().getSalesoff() / 100));
 
             item.setQuantity(Integer.toString(oCb.getQuantity()));
 

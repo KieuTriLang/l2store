@@ -29,54 +29,54 @@ public class L2storeApplication {
 		return new BCryptPasswordEncoder();
 	}
 
-	@Bean
-	CommandLineRunner run(UserService userService) {
-		return arg -> {
+	// @Bean
+	// CommandLineRunner run(UserService userService) {
+	// return arg -> {
 
-			userService.saveRole(new Role(null, "ROLE_USER"));
-			userService.saveRole(new Role(null, "ROLE_MANAGER"));
-			userService.saveRole(new Role(null, "ROLE_ADMIN"));
-			userService.saveRole(new Role(null, "ROLE_SUPER_ADMIN"));
+	// userService.saveRole(new Role(null, "ROLE_USER"));
+	// userService.saveRole(new Role(null, "ROLE_MANAGER"));
+	// userService.saveRole(new Role(null, "ROLE_ADMIN"));
+	// userService.saveRole(new Role(null, "ROLE_SUPER_ADMIN"));
 
-			userService.saveUser(
-					User.builder()
-							.username("superadmin")
-							.password("1234")
-							.gender(true)
-							.email("superadmin@gmail.com")
-							.address("NewYork")
-							.dob(ZonedDateTime.now(ZoneId.of("Z")))
-							.roles(new ArrayList<>())
-							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
-							.build());
-			userService.saveUser(
-					User.builder()
-							.username("admin")
-							.password("1234")
-							.gender(true)
-							.email("admin@gmail.com")
-							.address("NewYork")
-							.dob(ZonedDateTime.now(ZoneId.of("Z")))
-							.roles(new ArrayList<>())
-							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
-							.build());
-			userService.saveUser(
-					User.builder()
-							.username("manager")
-							.password("1234")
-							.gender(true)
-							.email("manager@gmail.com")
-							.address("NewYork")
-							.roles(new ArrayList<>())
-							.dob(ZonedDateTime.now(ZoneId.of("Z")))
-							.updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
-							.build());
+	// userService.saveUser(
+	// User.builder()
+	// .username("superadmin")
+	// .password("1234")
+	// .gender(true)
+	// .email("superadmin@gmail.com")
+	// .address("NewYork")
+	// .dob(ZonedDateTime.now(ZoneId.of("Z")))
+	// .roles(new ArrayList<>())
+	// .updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+	// .build());
+	// userService.saveUser(
+	// User.builder()
+	// .username("admin")
+	// .password("1234")
+	// .gender(true)
+	// .email("admin@gmail.com")
+	// .address("NewYork")
+	// .dob(ZonedDateTime.now(ZoneId.of("Z")))
+	// .roles(new ArrayList<>())
+	// .updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+	// .build());
+	// userService.saveUser(
+	// User.builder()
+	// .username("manager")
+	// .password("1234")
+	// .gender(true)
+	// .email("manager@gmail.com")
+	// .address("NewYork")
+	// .roles(new ArrayList<>())
+	// .dob(ZonedDateTime.now(ZoneId.of("Z")))
+	// .updatedAt(ZonedDateTime.now(ZoneId.of("Z")))
+	// .build());
 
-			userService.addRoleToUser("superadmin", "ROLE_SUPER_ADMIN");
-			userService.addRoleToUser("superadmin", "ROLE_MANAGER");
-			userService.addRoleToUser("admin", "ROLE_ADMIN");
-			userService.addRoleToUser("manager", "ROLE_MANAGER");
-		};
-	}
+	// userService.addRoleToUser("superadmin", "ROLE_SUPER_ADMIN");
+	// userService.addRoleToUser("superadmin", "ROLE_MANAGER");
+	// userService.addRoleToUser("admin", "ROLE_ADMIN");
+	// userService.addRoleToUser("manager", "ROLE_MANAGER");
+	// };
+	// }
 
 }

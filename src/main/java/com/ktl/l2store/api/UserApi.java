@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,12 +45,17 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktl.l2store.common.RegisterForm;
+import com.ktl.l2store.dto.ReqChangePass;
+import com.ktl.l2store.dto.ReqUpdateUser;
 import com.ktl.l2store.dto.UserDto;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Role;
+import com.ktl.l2store.entity.Token;
 import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemNotfoundException;
 import com.ktl.l2store.provider.AuthorizationHeader;
+import com.ktl.l2store.service.Email.EmailService;
+import com.ktl.l2store.service.Token.TokenService;
 import com.ktl.l2store.service.user.UserService;
 import com.ktl.l2store.utils.PagingParam;
 
@@ -64,6 +70,12 @@ public class UserApi {
     private UserService userService;
 
     @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private ModelMapper mapper;
 
     // Get all user or search
@@ -73,6 +85,20 @@ public class UserApi {
             @PagingParam Pageable pageable) {
 
         Page<User> users = userService.getUsers(pageable);
+
+        List<UserDto> userDtos = users.stream().map(u -> mapper.map(u, UserDto.class)).toList();
+
+        Page<UserDto> resPageDto = new PageImpl<>(userDtos, pageable, users.getTotalElements());
+
+        return ResponseEntity.status(HttpStatus.OK).body(resPageDto);
+    }
+
+    // Get all user or search
+    @RequestMapping(value = "/role-user", method = RequestMethod.GET)
+    public ResponseEntity<Object> getUsersRoleUser(
+            @PagingParam Pageable pageable) {
+
+        Page<User> users = userService.getUsersByRole("ROLE_USER", pageable);
 
         List<UserDto> userDtos = users.stream().map(u -> mapper.map(u, UserDto.class)).toList();
 
@@ -102,17 +128,18 @@ public class UserApi {
     @RequestMapping(value = "/update", method = RequestMethod.PUT, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> updateUser(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @RequestPart UserDto reqUserDto,
+            @RequestPart String dataJson,
             @RequestPart(required = false) MultipartFile file) throws IOException {
         String username = AuthorizationHeader.getSub(authorizationHeader);
 
+        ReqUpdateUser reqUserDto = new ObjectMapper().readValue(dataJson, ReqUpdateUser.class);
         User user = User.builder()
                 .username(username)
                 .firstName(reqUserDto.getFirstName())
                 .lastName(reqUserDto.getLastName())
                 .gender(reqUserDto.isGender())
                 .address(reqUserDto.getAddress())
-                .dob(reqUserDto.getDob())
+                .dob(reqUserDto.getDob().toInstant().atZone(ZoneId.of("Z")))
                 .build();
         if (file != null) {
             user.setAvatar(
@@ -127,17 +154,14 @@ public class UserApi {
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public ResponseEntity<Object> register(@RequestBody RegisterForm form) throws IOException {
 
-        Path path = new File("src\\main\\java\\com\\ktl\\l2store\\avatar.jpg").toPath();
+        // Path path = new
+        // File("src\\main\\java\\com\\ktl\\l2store\\avatar.jpg").toPath();
         User newUser = User.builder()
                 .id(null)
                 .username(form.getUsername())
                 .email(form.getEmail())
                 .password(form.getPassword())
-                .gender(true)
-                .avatar(new FileDB(null, Calendar.getInstance().getTimeInMillis(), Files.readAllBytes(path), null,
-                        Files.probeContentType(path)))
-                .address("")
-                .dob(ZonedDateTime.now(ZoneId.of("Z")))
+                .enable(false)
                 .roles(new ArrayList<>())
                 .favProducts(new ArrayList<>())
                 .orders(new ArrayList<>())
@@ -146,6 +170,25 @@ public class UserApi {
 
         User user = userService.saveUser(newUser);
 
+        // .avatar(new FileDB(null, Calendar.getInstance().getTimeInMillis(),
+        // Files.readAllBytes(path), null,
+        // Files.probeContentType(path)))
+
+        Token token = Token.builder()
+                .token(UUID.randomUUID().toString())
+                .createdAt(ZonedDateTime.now(ZoneId.of("Z")))
+                .expiresAt(ZonedDateTime.now(ZoneId.of("Z")).plusMinutes(15))
+                .user(user)
+                .build();
+
+        tokenService.saveToken(token);
+
+        String link = "http://localhost:4200/confirm?token=" + token.getToken();
+
+        String email = emailService.buildEmail(user.getUsername(), link);
+
+        emailService.send(user.getEmail(), email);
+
         userService.addRoleToUser(user.getUsername(), "ROLE_USER");
 
         user = userService.getUser(user.getUsername());
@@ -153,6 +196,86 @@ public class UserApi {
         UserDto userDto = mapper.map(user, UserDto.class);
 
         return new ResponseEntity<>(userDto, HttpStatus.CREATED);
+    }
+
+    @RequestMapping(value = "/re-confirm", method = RequestMethod.POST)
+    public ResponseEntity<Object> reConfirmAccount(@RequestBody String emailAddress) {
+
+        User user = userService.getUserByEmail(emailAddress);
+
+        Token token = Token.builder()
+                .token(UUID.randomUUID().toString())
+                .createdAt(ZonedDateTime.now(ZoneId.of("Z")))
+                .expiresAt(ZonedDateTime.now(ZoneId.of("Z")).plusMinutes(15))
+                .user(user)
+                .build();
+
+        tokenService.saveToken(token);
+
+        String link = "http://localhost:4200/confirm?token=" + token.getToken();
+
+        String email = emailService.buildEmail(user.getUsername(), link);
+
+        emailService.send(user.getEmail(), email);
+
+        return ResponseEntity.status(HttpStatus.OK).body("");
+    }
+
+    @RequestMapping(value = "/confirm", method = RequestMethod.GET)
+    public ResponseEntity<Object> activeUser(@RequestParam("token") String token) {
+
+        boolean confirm = tokenService.confirmToken(token);
+        return ResponseEntity.status(HttpStatus.OK).body(confirm);
+    }
+
+    @RequestMapping(value = "/{username}/exist", method = RequestMethod.GET)
+    public ResponseEntity<Object> checkUserExist(@PathVariable String username) {
+
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @RequestMapping(value = "/reset-password", method = RequestMethod.POST)
+    public ResponseEntity<Object> resetPassword(@RequestBody String emailAddress) {
+
+        User user = userService.getUserByEmail(emailAddress);
+
+        Token token = Token.builder()
+                .token(UUID.randomUUID().toString())
+                .createdAt(ZonedDateTime.now(ZoneId.of("Z")))
+                .expiresAt(ZonedDateTime.now(ZoneId.of("Z")).plusMinutes(15))
+                .user(user)
+                .build();
+
+        tokenService.saveToken(token);
+
+        String link = "http://localhost:4200/reset-password?token=" + token.getToken();
+
+        String email = emailService.buildEmailReset(user.getUsername(), link);
+
+        emailService.send(user.getEmail(), email);
+
+        return ResponseEntity.status(HttpStatus.OK).body("");
+    }
+
+    @RequestMapping(value = "/reset", method = RequestMethod.GET)
+    public ResponseEntity<Object> requestMethodName(@RequestParam("token") String token) {
+        boolean confirm = tokenService.resetToken(token);
+        return ResponseEntity.status(HttpStatus.OK).body(confirm);
+    }
+
+    @RequestMapping(value = "/reset/{token}", method = RequestMethod.POST)
+    public ResponseEntity<Object> requestMethodName(@PathVariable("token") String token, @RequestBody String password) {
+        userService.resetPassByToken(token, password);
+        return ResponseEntity.ok("");
+    }
+
+    @RequestMapping(value = "/change-password", method = RequestMethod.POST)
+    public ResponseEntity<Object> changePass(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestBody ReqChangePass reqChangePass) {
+        String username = AuthorizationHeader.getSub(authorizationHeader);
+
+        userService.changePassword(username, reqChangePass.getOldPassword(), reqChangePass.getNewPassword());
+        return ResponseEntity.ok("");
     }
 
     // Add role to user
@@ -190,7 +313,7 @@ public class UserApi {
                 User user = userService.getUser(username);
                 String access_token = JWT.create()
                         .withSubject(user.getUsername())
-                        .withExpiresAt(new Date(System.currentTimeMillis() + 10 * 60 * 1000))
+                        .withExpiresAt(new Date(System.currentTimeMillis() + 8 * 60 * 60 * 1000))
                         .withIssuer(request.getRequestURL().toString())
                         .withClaim("roles",
                                 user.getRoles().stream().map(Role::getName)

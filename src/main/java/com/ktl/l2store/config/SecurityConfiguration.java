@@ -1,6 +1,7 @@
 package com.ktl.l2store.config;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -51,33 +52,48 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 http.csrf().disable();
                 http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
-                // http.authorizeRequests()
-                // .antMatchers("/api/login/**", "/api/users/token/refresh/**",
-                // "/api/users/register/**")
-                // .permitAll();
-                // // User
-                // http.authorizeRequests()
-                // .antMatchers("/api/users/").permitAll()
-                // // .antMatchers("/api/users/").hasAnyAuthority("ROLE_SUPER_ADMIN")
-                // .antMatchers("/api/users/role/**").hasAnyAuthority("ROLE_SUPER_ADMIN")
-                // .antMatchers(HttpMethod.GET, "/api/users/**").permitAll();
+                http.authorizeRequests()
+                                .antMatchers("/api/login/**", "/api/users/token/refresh/**",
+                                                "/api/users/register/**")
+                                .permitAll();
+                // User
+                http.authorizeRequests()
+                                .antMatchers("/api/users/**").permitAll()
+                                .antMatchers("/api/users").hasAnyAuthority("ROLE_MANAGER")
+                                .antMatchers(HttpMethod.GET, "/api/users/profile").hasAnyAuthority("ROLE_USER")
+                                .antMatchers(HttpMethod.POST, "/api/users/change-password").hasAnyAuthority("ROLE_USER")
+                                .antMatchers(HttpMethod.PUT, "/api/users/update").hasAnyAuthority("ROLE_USER");
 
-                // // Product
-                // http.authorizeRequests()
-                // .antMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                // .antMatchers(HttpMethod.POST,
-                // "/api/products/**/evaluates/**").hasAnyAuthority(
-                // "ROLE_SUPER_ADMIN")
-                // .antMatchers("/api/products/**").hasAnyAuthority("ROLE_SUPER_ADMIN");
+                // Product
+                http.authorizeRequests()
+                                .antMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                                .antMatchers(HttpMethod.POST, "/api/products/**/evaluates/**")
+                                .hasAnyAuthority("ROLE_USER")
+                                .antMatchers("/api/products/**").hasAnyAuthority("ROLE_MANAGER");
 
-                // // Category
-                // http.authorizeRequests().antMatchers("/api/categories/**").permitAll();
-                // // Image
-                // http.authorizeRequests()
-                // .antMatchers("/api/file/**").permitAll()
-                // .antMatchers("/api/file/download/**").authenticated();
+                // Category
+                http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                                .antMatchers("/api/categories/**").hasAnyAuthority("ROLE_MANAGER");
+                // Order
+                http.authorizeRequests()
+                                .antMatchers(HttpMethod.GET, "/api/orders").hasAnyAuthority("ROLE_MANAGER")
+                                .antMatchers(HttpMethod.GET, "/api/orders/**")
+                                .hasAnyAuthority("ROLE_MANAGER", "ROLE_USER")
+                                .antMatchers(HttpMethod.GET, "/api/orders/my-orders/**").hasAnyAuthority("ROLE_USER")
+                                .antMatchers("/api/orders/**").hasAnyAuthority("ROLE_USER")
+                                .antMatchers("/api/orders/paypal/cancel-payment/**").hasAnyAuthority("ROLE_USER");
+                // ComboProduct
+                http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/combos/**").permitAll()
+                                .antMatchers("/api/combos/**").hasAnyAuthority("ROLE_MANAGER");
+                // Evauate
+                http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/evaluates/**")
+                                .hasAnyAuthority("ROLE_MANAGER");
+                // Image
+                http.authorizeRequests()
+                                .antMatchers("/api/file/**").permitAll()
+                                .antMatchers("/api/file/download/**").authenticated();
 
-                http.authorizeRequests().anyRequest().permitAll();
+                http.authorizeRequests().anyRequest().authenticated();
 
                 http.addFilter(customAuthenticaionFilter);
                 http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -93,9 +109,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         @Bean
         CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-                configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+                configuration.setAllowedOrigins(List.of("*"));
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                configuration.setAllowedHeaders(Collections.singletonList("*"));
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", configuration);
                 return source;

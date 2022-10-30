@@ -14,5 +14,7 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
 
     Page<Order> findByOwnerUsername(String username, Pageable pageable);
 
-    Order getByPaypalPaymentId(String paypalPaymentId);
+    Order findByPaypalPaymentId(String paypalPaymentId);
+
+    Order findByTokenId(String tokenId);
 }

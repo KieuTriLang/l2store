@@ -6,7 +6,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
@@ -16,6 +16,17 @@ spring:
       enabled: true
       max-file-size: 15MB
       max-request-size: 15MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: 2414lq@gmail.com
+    password: dhhwuqxcgsulvffa
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 paypal:
   mode: sandbox

@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -30,6 +31,7 @@ import com.ktl.l2store.common.ProductFilterProps;
 import com.ktl.l2store.dto.EvaluateDto;
 import com.ktl.l2store.dto.ProductDetailDto;
 import com.ktl.l2store.dto.ProductOverviewDto;
+import com.ktl.l2store.dto.ReqEvaluate;
 import com.ktl.l2store.entity.Evaluate;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Product;
@@ -200,7 +202,7 @@ public class ProductApi {
     // Add evaluate
     @RequestMapping(value = "/{pId}/evaluates", method = RequestMethod.POST)
     public ResponseEntity<Object> addEvaluate(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @PathVariable Long pId, @RequestBody Evaluate evaluate) {
+            @PathVariable Long pId, @RequestBody ReqEvaluate evaluate) {
 
         String username = AuthorizationHeader.getSub(authorizationHeader);
 
@@ -212,12 +214,9 @@ public class ProductApi {
     // Update evaluate
     @RequestMapping(value = "/evaluates", method = RequestMethod.PUT)
     public ResponseEntity<Object> updateEvaluate(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-            @RequestBody EvaluateDto evaluateDto) {
+            @RequestBody ReqEvaluate evaluate) {
 
         String username = AuthorizationHeader.getSub(authorizationHeader);
-
-        Evaluate evaluate = Evaluate.builder().id(evaluateDto.getId()).star(evaluateDto.getStar())
-                .content(evaluateDto.getContent()).build();
 
         evaluateService.updateEvaluate(username, evaluate);
 

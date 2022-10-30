@@ -18,10 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ktl.l2store.entity.Role;
+import com.ktl.l2store.entity.Token;
 import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemExistException;
 import com.ktl.l2store.exception.ItemNotfoundException;
 import com.ktl.l2store.repo.RoleRepo;
+import com.ktl.l2store.repo.TokenRepo;
 import com.ktl.l2store.repo.UserRepo;
 
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private RoleRepo roleRepo;
     @Autowired
+    private TokenRepo tokenRepo;
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
@@ -46,7 +50,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         log.info("");
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ItemNotfoundException("Not found user"));
-
+        boolean enable = user.isEnable();
+        boolean isUser = user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_USER"));
+        if (!enable && isUser) {
+            throw new ItemNotfoundException("Your account is not actived!");
+        }
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
         user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getName())));
@@ -118,16 +126,69 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .orElseThrow(() -> new ItemNotfoundException("Not found user: " + user.getUsername()));
         record.setFirstName(user.getFirstName());
         record.setLastName(user.getLastName());
-        record.setEmail(user.getEmail());
         record.setGender(user.isGender());
-        record.getAvatar().setData(user.getAvatar().getData());
-        record.getAvatar().setName(user.getAvatar().getName());
-        record.getAvatar().setType(user.getAvatar().getType());
+
         record.setAddress(user.getAddress());
         record.setDob(user.getDob());
         record.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Z")));
+        if (user.getAvatar() != null) {
+            record.getAvatar().setData(user.getAvatar().getData());
+            record.getAvatar().setName(user.getAvatar().getName());
+            record.getAvatar().setType(user.getAvatar().getType());
+        }
 
         return userRepo.save(record);
+    }
+
+    @Override
+    public boolean checkUserNameExist(String username) {
+        // TODO Auto-generated method stub
+
+        return userRepo.existsUserByUsername(username);
+    }
+
+    @Override
+    public boolean checkEmailExist(String username) {
+        // TODO Auto-generated method stub
+
+        return userRepo.existsUserByEmail(username);
+    }
+
+    @Override
+    public User getUserByEmail(String emailAddress) throws ItemNotfoundException {
+        // TODO Auto-generated method stub
+        return userRepo.findByEmail(emailAddress).orElseThrow(() -> new ItemNotfoundException("Email not exist"));
+    }
+
+    @Override
+    public void resetPassByToken(String token, String pass) {
+        // TODO Auto-generated method stub
+        Token tokenRecord = tokenRepo.findByToken(token)
+                .orElseThrow(() -> new ItemNotfoundException("not found token"));
+        User user = tokenRecord.getUser();
+
+        user.setPassword(passwordEncoder.encode(pass));
+
+        userRepo.save(user);
+    }
+
+    @Override
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        // TODO Auto-generated method stub
+        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new ItemNotfoundException("Current password incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        userRepo.save(user);
+    }
+
+    @Override
+    public Page<User> getUsersByRole(String roleName, Pageable pageable) {
+        // TODO Auto-generated method stub
+        return userRepo.findByRolesName(roleName, pageable);
     }
 
 }

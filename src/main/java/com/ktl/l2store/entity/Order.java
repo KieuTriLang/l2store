@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -14,6 +15,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.transaction.Transactional;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import com.ktl.l2store.common.PaymentType;
 
@@ -32,11 +37,13 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "order")
-    private Collection<OrderProduct> orderProducts;
+    @OneToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    private Collection<OProduct> orderProducts;
 
-    @OneToMany(mappedBy = "order")
-    private Collection<OrderCombo> orderCombos;
+    @OneToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    private Collection<OCombo> orderCombos;
 
     @Column(columnDefinition = "Decimal(3,2) default 0")
     private double shipping;
@@ -64,4 +71,6 @@ public class Order {
     private String momoPaymentId;
 
     private String cashPaymentId;
+
+    private String tokenId;
 }

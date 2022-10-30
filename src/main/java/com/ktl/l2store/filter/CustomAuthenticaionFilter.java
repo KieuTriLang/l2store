@@ -39,6 +39,7 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
                 String email = request.getParameter("email");
                 String password = request.getParameter("password");
                 log.info("username: {} - password: {}", email, password);
+
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                                 email,
                                 password);
@@ -54,7 +55,7 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
                 Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
                 String access_token = JWT.create()
                                 .withSubject(user.getUsername())
-                                .withExpiresAt(new Date(System.currentTimeMillis() + 45 * 60 * 1000))
+                                .withExpiresAt(new Date(System.currentTimeMillis() + 1 * 60 * 1000))
                                 .withIssuer(request.getRequestURL().toString())
                                 .withClaim("roles",
                                                 user.getAuthorities().stream().map(GrantedAuthority::getAuthority)
@@ -76,7 +77,7 @@ public class CustomAuthenticaionFilter extends UsernamePasswordAuthenticationFil
         protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                         AuthenticationException failed) throws IOException, ServletException {
                 // TODO Auto-generated method stub
-                super.unsuccessfulAuthentication(request, response, failed);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, failed.getLocalizedMessage());
         }
 
 }

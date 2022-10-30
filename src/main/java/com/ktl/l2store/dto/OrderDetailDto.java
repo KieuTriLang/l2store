@@ -2,11 +2,13 @@ package com.ktl.l2store.dto;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.Date;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
 import com.ktl.l2store.common.PaymentType;
+import com.ktl.l2store.entity.User;
 
 import lombok.Data;
 
@@ -15,9 +17,9 @@ public class OrderDetailDto {
 
     private Long id;
 
-    private Collection<OrderProductDto> orderProducts;
+    private Collection<OrderItem> orderProducts;
 
-    private Collection<OrderComboDto> orderCombos;
+    private Collection<OrderItem> orderCombos;
 
     private double shipping;
 
@@ -28,7 +30,21 @@ public class OrderDetailDto {
     @Enumerated(EnumType.STRING)
     private PaymentType paymentType;
 
-    private ZonedDateTime createdTime;
+    private Date createdTime;
 
-    private ZonedDateTime paymentTime;
+    private Date paymentTime;
+
+    private String payer;
+
+    public void convertCreatedDate(ZonedDateTime date) {
+        this.createdTime = Date.from(date.toInstant());
+    }
+
+    public void convertPaymentDate(ZonedDateTime date) {
+        this.paymentTime = Date.from(date.toInstant());
+    }
+
+    public void setPayerName(User user) {
+        this.payer = user.getUsername();
+    }
 }

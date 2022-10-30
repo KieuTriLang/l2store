@@ -29,6 +29,8 @@ public class ComboProductOverviewDto {
 
     private double totalPrice;
 
+    private int totalPurchases;
+
     public void setProductImagesUrl(Collection<Product> products) {
         this.productImages = products.stream()
                 .map(item -> URIBuilder.generate("/api/file/" + item.getImage().getFileCode())).toList();

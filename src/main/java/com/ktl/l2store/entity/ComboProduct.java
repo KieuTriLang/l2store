@@ -36,10 +36,19 @@ public class ComboProduct {
 
     private double totalPrice;
 
+    private int totalPurchases;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "owner_id", nullable = true)
     private User owner;
 
     @Column(name = "created_time")
     private ZonedDateTime createdTime;
+
+    public void addTotalPurchases(int quantity) {
+        this.totalPurchases += quantity;
+        for (Product p : this.products) {
+            p.addTotalPurchases(quantity);
+        }
+    }
 }

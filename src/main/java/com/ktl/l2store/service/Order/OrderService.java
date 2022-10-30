@@ -3,6 +3,7 @@ package com.ktl.l2store.service.Order;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 
+import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.dto.ReqOrderDto;
 import com.ktl.l2store.entity.Order;
 
@@ -16,7 +17,11 @@ public interface OrderService {
 
     Order createOrder(String username, ReqOrderDto reqOrderDto);
 
+    Order saveOrder(Order order);
+
+    void deleteByTokenId(String tokenId);
+
     void addPaypalPaymentId(Long id, String paypalPaymentId);
 
-    void updatePayedByPaypalPaymentId(String paypalPaymentId);
+    void updatePayedByPaypalPaymentId(String paypalPaymentId, PaymentType type);
 }

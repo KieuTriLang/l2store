@@ -3,9 +3,9 @@ package com.ktl.l2store.dto;
 import lombok.Data;
 
 @Data
-public class OrderProductDto {
+public class OrderItem {
 
-    private String nameProduct;
+    private String name;
 
     private double price;
 

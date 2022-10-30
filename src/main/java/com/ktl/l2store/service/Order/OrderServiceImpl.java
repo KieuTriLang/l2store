@@ -12,14 +12,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.dto.ReqOrderDto;
 import com.ktl.l2store.entity.ComboProduct;
 import com.ktl.l2store.entity.Order;
+import com.ktl.l2store.entity.OCombo;
+import com.ktl.l2store.entity.OProduct;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.entity.User;
 import com.ktl.l2store.exception.ItemNotfoundException;
 import com.ktl.l2store.exception.ListException;
 import com.ktl.l2store.repo.ComboProductRepo;
+import com.ktl.l2store.repo.OComboRepo;
+import com.ktl.l2store.repo.OProductRepo;
 import com.ktl.l2store.repo.OrderRepo;
 import com.ktl.l2store.repo.ProductRepo;
 import com.ktl.l2store.repo.UserRepo;
@@ -39,12 +44,20 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepo orderRepo;
 
+    @Autowired
+    OProductRepo oProductRepo;
+    @Autowired
+    OComboRepo oComboRepo;
+
     @Override
     public Order createOrder(String username, ReqOrderDto reqOrderDto) {
 
         User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
 
         Order order = new Order();
+
+        List<OProduct> orderProducts = new ArrayList<>();
+        List<OCombo> orderCombos = new ArrayList<>();
 
         List<String> messages = new ArrayList<>();
 
@@ -55,8 +68,11 @@ public class OrderServiceImpl implements OrderService {
             if (product.isLocked()) {
                 messages.add(product.getName() + " has been discontinued!");
             } else {
-                total = product.getPrice() * item.getQuantity();
+                total += (product.getPrice() - product.getPrice() * product.getSalesoff() / 100) * item.getQuantity();
             }
+            OProduct op = oProductRepo.save(OProduct.builder().product(product).quantity(item.getQuantity()).build());
+            orderProducts
+                    .add(op);
         }
 
         for (ReqOrderDto.Combo item : reqOrderDto.getCombos()) {
@@ -72,8 +88,11 @@ public class OrderServiceImpl implements OrderService {
                     }
                 }
             }
-            total = cbProduct.getTotalPrice() * item.getQuantity();
+            total += (cbProduct.getTotalPrice() - cbProduct.getTotalPrice() * cbProduct.getSalesoff() / 100)
+                    * item.getQuantity();
 
+            OCombo ocb = oComboRepo.save(OCombo.builder().comboProduct(cbProduct).quantity(item.getQuantity()).build());
+            orderCombos.add(ocb);
         }
         if (messages.size() > 0) {
             throw new ListException(messages);
@@ -81,7 +100,10 @@ public class OrderServiceImpl implements OrderService {
 
         order.setOwner(user);
 
-        order.setCashPaymentId(UUID.randomUUID().toString());
+        // order.setCashPaymentId(UUID.randomUUID().toString());
+        order.setOrderCombos(orderCombos);
+
+        order.setOrderProducts(orderProducts);
 
         order.setCreatedTime(ZonedDateTime.now(ZoneId.of("Z")));
 
@@ -92,15 +114,54 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void addPaypalPaymentId(Long id, String paypalPaymentId) {
-
-        Order order = orderRepo.getById(id);
+        Order order = orderRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("not found order"));
         order.setPaypalPaymentId(paypalPaymentId);
         orderRepo.save(order);
     }
 
     @Override
-    public void updatePayedByPaypalPaymentId(String paypalPaymentId) {
-        Order order = orderRepo.getByPaypalPaymentId(paypalPaymentId);
+    public void updatePayedByPaypalPaymentId(String paypalPaymentId, PaymentType type) {
+        Order order = orderRepo.findByPaypalPaymentId(paypalPaymentId);
+
+        // List<OProduct> ops = order.getOrderProducts().stream().map(op -> {
+        // op.getProduct().addTotalPurchases(op.getQuantity());
+        // return op;
+        // }).toList();
+        // order.setOrderProducts(ops);
+        // List<OCombo> ocs = order.getOrderCombos().stream().map(oc -> {
+        // oc.getComboProduct().addTotalPurchases(oc.getQuantity());
+        // return oc;
+        // }).toList();
+        // order.setOrderCombos(ocs);
+
+        List<OProduct> ops = order.getOrderProducts().stream().map(op -> {
+            Product p = op.getProduct();
+            p.addTotalPurchases(op.getQuantity());
+            op.setProduct(productRepo.save(p));
+            return op;
+        }).toList();
+        order.setOrderProducts(ops);
+        List<OCombo> ocs = order.getOrderCombos().stream().map(oc -> {
+            ComboProduct cp = oc.getComboProduct();
+            cp.addTotalPurchases(oc.getQuantity());
+            oc.setComboProduct(cbProductRepo.save(cp));
+            return oc;
+        }).toList();
+        order.setOrderCombos(ocs);
+
+        // if (order.getOrderProducts().size() > 0) {
+        // for (OrderProduct op : order.getOrderProducts()) {
+        // op.getProduct().addTotalPurchases(op.getQuantity());
+        // }
+        // }
+        // if (order.getOrderCombos().size() > 0) {
+        // for (OrderCombo oc : order.getOrderCombos()) {
+        // oc.getComboProduct().addTotalPurchases(oc.getQuantity());
+        // }
+        // }
+
+        order.setPaymentTime(ZonedDateTime.now(ZoneId.of("Z")));
+        order.setPaymentType(type);
         order.setPayed(true);
         orderRepo.save(order);
     }
@@ -121,5 +182,18 @@ public class OrderServiceImpl implements OrderService {
     public Order getById(Long id) {
 
         return orderRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Order is not exist!"));
+    }
+
+    @Override
+    public Order saveOrder(Order order) {
+        // TODO Auto-generated method stub
+        return orderRepo.save(order);
+    }
+
+    @Override
+    public void deleteByTokenId(String tokenId) {
+        // TODO Auto-generated method stub
+        Order order = orderRepo.findByTokenId(tokenId);
+        orderRepo.delete(order);
     }
 }

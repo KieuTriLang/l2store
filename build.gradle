@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '2.6.11'
+	id 'org.springframework.boot' version '2.6.13'
 	id 'io.spring.dependency-management' version '1.0.12.RELEASE'
 	id 'java'
 }
@@ -24,6 +24,7 @@ dependencies {
   	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'com.auth0:java-jwt:3.18.3'
 	implementation 'com.paypal.sdk:rest-api-sdk:1.14.0'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	
 	compileOnly 'org.projectlombok:lombok'
 	compileOnly 'org.modelmapper:modelmapper:3.1.0'

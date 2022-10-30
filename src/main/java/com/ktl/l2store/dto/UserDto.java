@@ -2,6 +2,7 @@ package com.ktl.l2store.dto;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.Date;
 
 import com.ktl.l2store.entity.Role;
 import com.ktl.l2store.provider.URIBuilder;
@@ -25,9 +26,13 @@ public class UserDto {
 
     private Collection<Role> roles;
 
-    private ZonedDateTime dob;
+    private Date dob;
 
     public void setAvatarUri(String avatarCode) {
         this.avatar = URIBuilder.generate("/api/file/" + avatarCode);
+    }
+
+    public void convertDate(ZonedDateTime date) {
+        this.dob = Date.from(date.toInstant());
     }
 }

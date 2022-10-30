@@ -14,6 +14,7 @@ import com.ktl.l2store.common.ProductFilterProps;
 import com.ktl.l2store.entity.FileDB;
 import com.ktl.l2store.entity.Product;
 import com.ktl.l2store.exception.ItemNotfoundException;
+import com.ktl.l2store.repo.EvaluateRepo;
 import com.ktl.l2store.repo.FileDBRepo;
 import com.ktl.l2store.repo.ProductRepo;
 
@@ -25,6 +26,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepo productRepo;
+    @Autowired
+    private EvaluateRepo evaluateRepo;
     @Autowired
     private FileDBRepo fileDBRepo;
 
@@ -57,7 +60,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product getProduct(Long id) throws ItemNotfoundException {
 
-        return productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Not found product"));
+        Product product = productRepo.findById(id).orElseThrow(() -> new ItemNotfoundException("Not found product"));
+        product.setAmountOfEvaluate(evaluateRepo.findByProduct(product).size());
+        return product;
     }
 
     @Override

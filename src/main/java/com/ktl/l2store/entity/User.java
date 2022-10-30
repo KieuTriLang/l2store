@@ -48,6 +48,7 @@ public class User {
 
     private ZonedDateTime dob;
 
+    private boolean enable;
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @Fetch(FetchMode.SUBSELECT)
     private Collection<Role> roles;
@@ -63,6 +64,9 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Collection<Evaluate> evaluates;
+
+    @OneToMany(mappedBy = "user")
+    private Collection<Token> tokens;
 
     @Column(name = "update_at")
     private ZonedDateTime updatedAt;
