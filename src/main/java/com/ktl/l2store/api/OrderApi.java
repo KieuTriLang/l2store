@@ -125,7 +125,7 @@ public class OrderApi {
 
             Payment approvedPayment = paymentService.authorizePayment(user, order);
 
-            orderService.addPaypalPaymentId(order.getId(), approvedPayment.getId());
+            // orderService.addPaypalPaymentId(order.getId(), approvedPayment.getId());
 
             String approvalLink = paymentService.getApprovalLink(approvedPayment);
 
@@ -141,6 +141,7 @@ public class OrderApi {
             if (tokenId != null) {
                 tokenId = tokenId.substring(6);
                 order.setTokenId(tokenId);
+                order.setPaypalPaymentId(approvedPayment.getId());
                 orderService.saveOrder(order);
             }
 
