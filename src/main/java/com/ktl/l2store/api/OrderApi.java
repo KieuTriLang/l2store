@@ -144,7 +144,6 @@ public class OrderApi {
                 order.setPaypalPaymentId(approvedPayment.getId());
                 orderService.saveOrder(order);
             }
-
             return ResponseEntity.status(HttpStatus.OK).body(PaypalRes.builder().link(approvalLink).build());
 
         } catch (PayPalRESTException e) {

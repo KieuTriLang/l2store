@@ -128,18 +128,18 @@ public class ComboProductApi {
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<Object> createNewCombo(@RequestBody ReqCbProduct reqCbProduct) {
 
-        ComboProduct newCbProduct = cbProductService.createCbProduct(reqCbProduct);
+        cbProductService.createCbProduct(reqCbProduct);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(newCbProduct);
+        return ResponseEntity.status(HttpStatus.CREATED).body("");
     }
 
     // update combo
     @RequestMapping(value = "/update", method = RequestMethod.PUT)
     public ResponseEntity<Object> updateCombo(@RequestBody ReqCbProduct reqCbProduct) {
 
-        ComboProduct updatedCbProduct = cbProductService.updateCbProduct(reqCbProduct);
+        cbProductService.updateCbProduct(reqCbProduct);
 
-        return ResponseEntity.status(HttpStatus.OK).body(updatedCbProduct);
+        return ResponseEntity.status(HttpStatus.OK).body("");
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
