@@ -7,6 +7,7 @@ import java.util.Date;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
+import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.entity.OProduct;
 import com.ktl.l2store.entity.OCombo;
@@ -18,7 +19,11 @@ public class OrderOverviewDto {
 
     private Long id;
 
+    private String orderCode;
+
     private String buyer;
+
+    private String payer;
 
     private int amountOfProduct;
 
@@ -34,6 +39,9 @@ public class OrderOverviewDto {
     private Date createdTime;
 
     private Date paymentTime;
+
+    @Enumerated(EnumType.STRING)
+    private OrderState orderState;
 
     public void setAmountOfP(Collection<OProduct> products) {
         this.amountOfProduct = products != null ? products.size() : 0;

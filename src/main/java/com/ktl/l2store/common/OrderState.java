@@ -1,0 +1,8 @@
+package com.ktl.l2store.common;
+
+public enum OrderState {
+    WAITING_FOR_THE_GOODS,
+    GOING_TO_GET_IT,
+    DELIVERY_IN_PROGRESS, DELIVERED, CANCELLATION_OF_DELIVERY, WAITING_FOR_PROGRESSING,
+    UNFINISHED
+}

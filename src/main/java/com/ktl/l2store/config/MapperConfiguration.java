@@ -128,7 +128,7 @@ public class MapperConfiguration {
                                         protected void configure() {
                                                 map().convertCreatedDate(source.getCreatedTime());
                                                 map().convertPaymentDate(source.getPaymentTime());
-                                                map().setPayerName(source.getOwner());
+                                                map().setBuyerName(source.getOwner());
                                         }
                                 });
                 modelMapper.createTypeMap(OCombo.class, OrderItem.class)

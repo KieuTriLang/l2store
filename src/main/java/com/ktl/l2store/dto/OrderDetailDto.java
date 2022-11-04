@@ -7,6 +7,7 @@ import java.util.Date;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
+import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.entity.User;
 
@@ -16,6 +17,8 @@ import lombok.Data;
 public class OrderDetailDto {
 
     private Long id;
+
+    private String orderCode;
 
     private Collection<OrderItem> orderProducts;
 
@@ -34,7 +37,24 @@ public class OrderDetailDto {
 
     private Date paymentTime;
 
+    private String buyer;
+
     private String payer;
+
+    private String shippingAddress;
+
+    private String recipientName;
+
+    private String city;
+
+    private String countryCode;
+
+    private String postalCode;
+
+    private String phone;
+
+    @Enumerated(EnumType.STRING)
+    private OrderState orderState;
 
     public void convertCreatedDate(ZonedDateTime date) {
         this.createdTime = Date.from(date.toInstant());
@@ -44,7 +64,7 @@ public class OrderDetailDto {
         this.paymentTime = Date.from(date.toInstant());
     }
 
-    public void setPayerName(User user) {
-        this.payer = user.getUsername();
+    public void setBuyerName(User user) {
+        this.buyer = user.getUsername();
     }
 }

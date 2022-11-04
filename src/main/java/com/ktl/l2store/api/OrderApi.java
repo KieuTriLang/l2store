@@ -1,5 +1,6 @@
 package com.ktl.l2store.api;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.dto.OrderDetailDto;
 import com.ktl.l2store.dto.OrderItem;
@@ -71,6 +73,18 @@ public class OrderApi {
 
         Page<OrderOverviewDto> resPageDto = new PageImpl<>(orderOverviewDtos, pageable, orders.getTotalElements());
         return ResponseEntity.ok(resPageDto);
+    }
+
+    @RequestMapping(value = "/order-state", method = RequestMethod.GET)
+    public ResponseEntity<Object> getOrderState() {
+        return ResponseEntity.ok(Arrays.asList(OrderState.values()));
+    }
+
+    @RequestMapping(value = "/order-state", method = RequestMethod.PUT)
+    public ResponseEntity<Object> updateOrderState(@RequestParam String orderCode,
+            @RequestParam OrderState orderState) {
+        orderService.updateOrderState(orderCode, orderState);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @RequestMapping(value = "/my-orders", method = RequestMethod.GET)
@@ -192,8 +206,8 @@ public class OrderApi {
     public ResponseEntity<Object> excutePayment(@RequestBody ReqExcutePayment req) {
 
         try {
-            paymentService.executePayment(req.getPaymentId(), req.getPayerId());
-            orderService.updatePayedByPaypalPaymentId(req.getPaymentId(), PaymentType.PAYPAL);
+            Payment payment = paymentService.executePayment(req.getPaymentId(), req.getPayerId());
+            orderService.updatePayedByPaypalPaymentId(req.getPaymentId(), PaymentType.PAYPAL, payment);
 
             return ResponseEntity.status(HttpStatus.OK).build();
 

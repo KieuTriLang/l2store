@@ -17,4 +17,6 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
     Order findByPaypalPaymentId(String paypalPaymentId);
 
     Order findByTokenId(String tokenId);
+
+    Order findByOrderCode(String orderCode);
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.dto.ReqOrderDto;
 import com.ktl.l2store.entity.ComboProduct;
@@ -28,6 +29,10 @@ import com.ktl.l2store.repo.OProductRepo;
 import com.ktl.l2store.repo.OrderRepo;
 import com.ktl.l2store.repo.ProductRepo;
 import com.ktl.l2store.repo.UserRepo;
+import com.paypal.api.payments.PayerInfo;
+import com.paypal.api.payments.Payment;
+import com.paypal.api.payments.ShippingAddress;
+import com.paypal.api.payments.Transaction;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -100,6 +105,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setOwner(user);
 
+        order.setOrderCode(UUID.randomUUID().toString().replace("-", "").toUpperCase());
         // order.setCashPaymentId(UUID.randomUUID().toString());
         order.setOrderCombos(orderCombos);
 
@@ -120,19 +126,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updatePayedByPaypalPaymentId(String paypalPaymentId, PaymentType type) {
+    public void updatePayedByPaypalPaymentId(String paypalPaymentId, PaymentType type, Payment payment) {
         Order order = orderRepo.findByPaypalPaymentId(paypalPaymentId);
-
-        // List<OProduct> ops = order.getOrderProducts().stream().map(op -> {
-        // op.getProduct().addTotalPurchases(op.getQuantity());
-        // return op;
-        // }).toList();
-        // order.setOrderProducts(ops);
-        // List<OCombo> ocs = order.getOrderCombos().stream().map(oc -> {
-        // oc.getComboProduct().addTotalPurchases(oc.getQuantity());
-        // return oc;
-        // }).toList();
-        // order.setOrderCombos(ocs);
 
         List<OProduct> ops = order.getOrderProducts().stream().map(op -> {
             Product p = op.getProduct();
@@ -160,8 +155,32 @@ public class OrderServiceImpl implements OrderService {
         // }
         // }
 
+        PayerInfo payerInfo = payment.getPayer().getPayerInfo();
+
+        List<Transaction> transactions = payment.getTransactions();
+
+        ShippingAddress shippingAddress = transactions.get(0).getItemList().getShippingAddress();
+
+        order.setPayer(String.format("%s %s", payerInfo.getFirstName(), payerInfo.getLastName()));
+
+        order.setShippingAddress(shippingAddress.getLine1());
+
+        order.setRecipientName(shippingAddress.getRecipientName());
+
+        order.setCity(shippingAddress.getCity());
+
+        order.setCountryCode(shippingAddress.getCountryCode());
+
+        order.setPostalCode(shippingAddress.getPostalCode());
+
+        order.setPhone(shippingAddress.getPhone());
+
+        order.setOrderState(OrderState.WAITING_FOR_THE_GOODS);
+
         order.setPaymentTime(ZonedDateTime.now(ZoneId.of("Z")));
+
         order.setPaymentType(type);
+
         order.setPayed(true);
         orderRepo.save(order);
     }
@@ -195,5 +214,14 @@ public class OrderServiceImpl implements OrderService {
         // TODO Auto-generated method stub
         Order order = orderRepo.findByTokenId(tokenId);
         orderRepo.delete(order);
+    }
+
+    @Override
+    public void updateOrderState(String orderCode, OrderState orderState) {
+        // TODO Auto-generated method stub
+        Order order = orderRepo.findByOrderCode(orderCode);
+        order.setOrderState(orderState);
+        orderRepo.save(order);
+
     }
 }

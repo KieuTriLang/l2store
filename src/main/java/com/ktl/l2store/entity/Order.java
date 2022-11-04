@@ -19,7 +19,9 @@ import javax.transaction.Transactional;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.springframework.security.access.method.P;
 
+import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
 
 import lombok.AllArgsConstructor;
@@ -36,6 +38,8 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String orderCode;
 
     @OneToMany(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
@@ -66,6 +70,20 @@ public class Order {
     @JoinColumn(name = "owner_id")
     private User owner;
 
+    private String payer;
+
+    private String shippingAddress;
+
+    private String recipientName;
+
+    private String city;
+
+    private String countryCode;
+
+    private String postalCode;
+
+    private String phone;
+
     private String paypalPaymentId;
 
     private String momoPaymentId;
@@ -73,4 +91,8 @@ public class Order {
     private String cashPaymentId;
 
     private String tokenId;
+
+    @Enumerated(EnumType.STRING)
+    private OrderState orderState;
+
 }
