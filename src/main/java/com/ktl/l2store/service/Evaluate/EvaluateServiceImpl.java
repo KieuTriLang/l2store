@@ -2,6 +2,7 @@ package com.ktl.l2store.service.Evaluate;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -54,8 +55,9 @@ public class EvaluateServiceImpl implements EvaluateService {
         Evaluate newEvaluate = Evaluate.builder().user(user).product(product).star(evaluate.getStar())
                 .content(evaluate.getContent()).postedTime(ZonedDateTime.now(ZoneId.of("Z"))).build();
 
-        evaluateRepo.save(newEvaluate);
+        newEvaluate = evaluateRepo.save(newEvaluate);
 
+        product.getEvaluates().add(newEvaluate);
         product.setAverageRate(
                 evaluateRepo.findByProduct(product).stream().mapToDouble(e -> e.getStar()).average().orElse(5));
         productRepo.save(product);
@@ -82,6 +84,22 @@ public class EvaluateServiceImpl implements EvaluateService {
     public Page<Evaluate> getAll(Pageable pageable) {
         // TODO Auto-generated method stub
         return evaluateRepo.findAll(pageable);
+    }
+
+    @Override
+    public void deleteMultiEvaluate(List<Long> ids) {
+        // TODO Auto-generated method stub
+        List<Product> record = productRepo.findByEvaluatesIdIn(ids);
+        // record.stream().map();
+        record.forEach(p -> p.getEvaluates().removeIf(e -> ids.contains(e.getId())));
+
+        productRepo.saveAll(record);
+    }
+
+    @Override
+    public Page<Evaluate> searchContentContains(String searchString, Pageable pageable) {
+        // TODO Auto-generated method stub
+        return evaluateRepo.findByContentContaining(searchString, pageable);
     }
 
 }

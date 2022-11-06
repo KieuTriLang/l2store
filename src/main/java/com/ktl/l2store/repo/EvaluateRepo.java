@@ -24,8 +24,11 @@ public interface EvaluateRepo extends JpaRepository<Evaluate, Long> {
 
     Page<Evaluate> findByUser(User user, Pageable pageable);
 
+    Page<Evaluate> findByContentContaining(String search, Pageable pageable);
+
     @Query(value = "SELECT AVG(e.star) FROM #{#entityName} e WHERE e.product_id = :idP", nativeQuery = true)
     double getAvgRateOfProduct(@Param("idP") Long idP);
 
+    List<Evaluate> findByIdIn(List<Long> ids);
     // double averageRateByProduct(Product product);
 }

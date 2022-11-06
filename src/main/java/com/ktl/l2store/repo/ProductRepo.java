@@ -15,6 +15,8 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
     Page<Product> findAll(Pageable pageable);
 
+    List<Product> findByEvaluatesIdIn(List<Long> id);
+
     Page<Product> findAllByLockedFalse(Pageable pageable);
 
     Page<Product> findByNameContaining(String infix, Pageable pageable);

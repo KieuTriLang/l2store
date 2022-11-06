@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ktl.l2store.dto.EvaluateDto;
@@ -28,7 +29,8 @@ public class EvaluateApi {
     private ModelMapper mapper;
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<Object> getImage(@PagingParam(sortTar = "postedTime", sortDir = "desc") Pageable pageable) {
+    public ResponseEntity<Object> getEvaluate(
+            @PagingParam(sortTar = "postedTime", sortDir = "desc") Pageable pageable) {
 
         Page<Evaluate> evaluates = evaluateService.getAll(pageable);
 
@@ -39,6 +41,29 @@ public class EvaluateApi {
                 evaluates.getTotalElements());
 
         return ResponseEntity.status(HttpStatus.OK).body(resPageDto);
+    }
+
+    @RequestMapping(value = "/search", method = RequestMethod.GET)
+    public ResponseEntity<Object> searchEvaluateContainsContent(@RequestParam String search,
+            @PagingParam(sortTar = "postedTime", sortDir = "desc") Pageable pageable) {
+
+        Page<Evaluate> evaluates = evaluateService.searchContentContains(search, pageable);
+
+        List<EvaluateDto> evaluateDtos = evaluates.stream()
+                .map(item -> mapper.map(item, EvaluateDto.class)).toList();
+
+        Page<EvaluateDto> resPageDto = new PageImpl<>(evaluateDtos, pageable,
+                evaluates.getTotalElements());
+
+        return ResponseEntity.status(HttpStatus.OK).body(resPageDto);
+    }
+
+    @RequestMapping(value = "delete", method = RequestMethod.DELETE)
+    public ResponseEntity<Object> deleteEvaluate(@RequestParam List<Long> ids) {
+
+        evaluateService.deleteMultiEvaluate(ids);
+
+        return ResponseEntity.status(HttpStatus.OK).body("");
     }
 
 }

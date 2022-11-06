@@ -87,7 +87,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/combos/**").permitAll()
                                 .antMatchers("/api/combos/**").hasAnyAuthority("ROLE_MANAGER");
                 // Evauate
-                http.authorizeRequests().antMatchers(HttpMethod.GET, "/api/evaluates/**")
+                http.authorizeRequests().antMatchers("/api/evaluates/**")
                                 .hasAnyAuthority("ROLE_MANAGER");
                 // Image
                 http.authorizeRequests()

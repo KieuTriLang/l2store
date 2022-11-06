@@ -54,6 +54,7 @@ public class MapperConfiguration {
 
                                                 map().setSold(source.getTotalPurchases());
                                                 map().setImageUri(source.getImage().getFileCode().toString());
+                                                map().setaoe(source.getEvaluates());
                                         }
 
                                 });
