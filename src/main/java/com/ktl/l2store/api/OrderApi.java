@@ -1,5 +1,6 @@
 package com.ktl.l2store.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -21,8 +22,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ktl.l2store.common.DataStatistic;
 import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
+import com.ktl.l2store.common.Statistic;
 import com.ktl.l2store.dto.OrderDetailDto;
 import com.ktl.l2store.dto.OrderItem;
 import com.ktl.l2store.dto.OrderOverviewDto;
@@ -72,6 +75,7 @@ public class OrderApi {
                 .map(order -> modelMapper.map(order, OrderOverviewDto.class)).toList();
 
         Page<OrderOverviewDto> resPageDto = new PageImpl<>(orderOverviewDtos, pageable, orders.getTotalElements());
+
         return ResponseEntity.ok(resPageDto);
     }
 
@@ -217,6 +221,13 @@ public class OrderApi {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
+    }
+
+    @RequestMapping(value = "/data-order-statistic", method = RequestMethod.GET)
+    public ResponseEntity<Object> dataOrderStatistic() {
+        Statistic statistic = new Statistic(orderService.totalProductsByDate(), orderService.totalCombosByDate(),
+                orderService.turnoverByDate());
+        return ResponseEntity.status(HttpStatus.OK).body(statistic);
     }
 
 }

@@ -23,4 +23,6 @@ public interface EvaluateService {
     Evaluate updateEvaluate(String username, ReqEvaluate evaluate);
 
     void deleteMultiEvaluate(List<Long> ids);
+
+    void saveMultiEvaluate(List<Evaluate> evaluates);
 }

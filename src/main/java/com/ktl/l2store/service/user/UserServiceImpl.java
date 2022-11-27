@@ -191,4 +191,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userRepo.findByRolesName(roleName, pageable);
     }
 
+    @Override
+    public void saveMultiUser(List<User> users) {
+        // TODO Auto-generated method stub
+        List<User> records = userRepo.saveAll(users);
+        for (User user : records) {
+            user.getRoles().add(roleRepo.findByName("ROLE_USER").orElse(null));
+        }
+    }
+
+    @Override
+    public List<User> getAllUser() {
+        // TODO Auto-generated method stub
+        return userRepo.findByRolesName("ROLE_USER");
+    }
+
 }

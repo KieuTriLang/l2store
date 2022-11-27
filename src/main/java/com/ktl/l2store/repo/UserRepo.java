@@ -1,5 +1,6 @@
 package com.ktl.l2store.repo;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -11,6 +12,8 @@ import com.ktl.l2store.entity.User;
 
 @Repository
 public interface UserRepo extends JpaRepository<User, Long> {
+
+    List<User> findByRolesName(String nameRole);
 
     Page<User> findAll(Pageable pageable);
 

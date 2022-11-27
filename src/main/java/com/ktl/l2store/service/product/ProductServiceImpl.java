@@ -125,4 +125,10 @@ public class ProductServiceImpl implements ProductService {
         productRepo.delete(product);
     }
 
+    @Override
+    public List<Product> getAll() {
+        // TODO Auto-generated method stub
+        return productRepo.findAll();
+    }
+
 }

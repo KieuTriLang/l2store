@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import com.ktl.l2store.common.DataStatistic;
 import com.ktl.l2store.common.OrderState;
 import com.ktl.l2store.common.PaymentType;
 import com.ktl.l2store.dto.ReqOrderDto;
@@ -61,6 +63,8 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = new Order();
 
+        order = orderRepo.save(order);
+
         List<OProduct> orderProducts = new ArrayList<>();
         List<OCombo> orderCombos = new ArrayList<>();
 
@@ -75,7 +79,8 @@ public class OrderServiceImpl implements OrderService {
             } else {
                 total += (product.getPrice() - product.getPrice() * product.getSalesoff() / 100) * item.getQuantity();
             }
-            OProduct op = oProductRepo.save(OProduct.builder().product(product).quantity(item.getQuantity()).build());
+            OProduct op = oProductRepo
+                    .save(OProduct.builder().product(product).quantity(item.getQuantity()).order(order).build());
             orderProducts
                     .add(op);
         }
@@ -96,7 +101,8 @@ public class OrderServiceImpl implements OrderService {
             total += (cbProduct.getTotalPrice() - cbProduct.getTotalPrice() * cbProduct.getSalesoff() / 100)
                     * item.getQuantity();
 
-            OCombo ocb = oComboRepo.save(OCombo.builder().comboProduct(cbProduct).quantity(item.getQuantity()).build());
+            OCombo ocb = oComboRepo
+                    .save(OCombo.builder().comboProduct(cbProduct).quantity(item.getQuantity()).order(order).build());
             orderCombos.add(ocb);
         }
         if (messages.size() > 0) {
@@ -182,6 +188,7 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentType(type);
 
         order.setPayed(true);
+
         orderRepo.save(order);
     }
 
@@ -223,5 +230,124 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderState(orderState);
         orderRepo.save(order);
 
+    }
+
+    @Override
+    public void seedOrderByUsername(String username, ReqOrderDto reqOrderDto) {
+        // TODO Auto-generated method stub
+        User user = userRepo.findByUsername(username).orElseThrow(() -> new ItemNotfoundException("Not found user"));
+
+        Order order = new Order();
+
+        order = orderRepo.save(order);
+        List<OProduct> orderProducts = new ArrayList<>();
+        List<OCombo> orderCombos = new ArrayList<>();
+
+        List<String> messages = new ArrayList<>();
+
+        double total = 0;
+
+        for (ReqOrderDto.Product item : reqOrderDto.getProducts()) {
+            Product product = productRepo.findById(item.getId()).orElse(null);
+            if (product.isLocked()) {
+                messages.add(product.getName() + " has been discontinued!");
+            } else {
+                total += (product.getPrice() - product.getPrice() * product.getSalesoff() / 100) * item.getQuantity();
+            }
+            product.addTotalPurchases(item.getQuantity());
+            productRepo.save(product);
+            OProduct op = oProductRepo
+                    .save(OProduct.builder().product(product).quantity(item.getQuantity()).order(order).build());
+            orderProducts
+                    .add(op);
+        }
+
+        for (ReqOrderDto.Combo item : reqOrderDto.getCombos()) {
+
+            ComboProduct cbProduct = cbProductRepo.findById(item.getId()).orElse(null);
+
+            Collection<Product> productInCombo = cbProduct.getProducts();
+
+            if (productInCombo.size() > 0) {
+                for (Product product : productInCombo) {
+                    if (product.isLocked()) {
+                        messages.add(product.getName() + " in " + cbProduct.getName() + " has been discontinued!");
+                    }
+                    product.addTotalPurchases(item.getQuantity());
+                }
+                productRepo.saveAll(productInCombo);
+            }
+            total += (cbProduct.getTotalPrice() - cbProduct.getTotalPrice() * cbProduct.getSalesoff() / 100)
+                    * item.getQuantity();
+
+            OCombo ocb = oComboRepo
+                    .save(OCombo.builder().comboProduct(cbProduct).quantity(item.getQuantity()).order(order).build());
+            orderCombos.add(ocb);
+        }
+        if (messages.size() > 0) {
+            throw new ListException(messages);
+        }
+
+        ZonedDateTime dateTime = ZonedDateTime.now(ZoneId.of("Z")).minusDays(randomMinMax(0, 365));
+        order.setOwner(user);
+
+        order.setOrderCode(UUID.randomUUID().toString().replace("-", "").toUpperCase());
+        // order.setCashPaymentId(UUID.randomUUID().toString());
+        order.setOrderCombos(orderCombos);
+
+        order.setOrderProducts(orderProducts);
+
+        order.setCreatedTime(dateTime);
+
+        order.setTotal(total);
+
+        order.setPayer(String.format("%s %s", "Kieu Tri", "Lang"));
+
+        order.setShippingAddress("Ha Noi");
+
+        order.setRecipientName(user.getUsername());
+
+        order.setCity("Ha Noi");
+
+        order.setCountryCode("VN");
+
+        order.setPostalCode("21232");
+
+        order.setPhone("12345678");
+
+        order.setOrderState(OrderState.values()[randomMinMax(0, OrderState.values().length - 1)]);
+
+        order.setPaymentTime(dateTime);
+
+        order.setPaymentType(PaymentType.PAYPAL);
+
+        order.setPayed(true);
+
+        order.setPaypalPaymentId("PAYID-" + UUID.randomUUID().toString().replace("-", "").toUpperCase());
+        order.setTokenId("EC-" + UUID.randomUUID().toString().replace("-", "").toUpperCase());
+
+        orderRepo.save(order);
+    }
+
+    private int randomMinMax(int min, int max) {
+        return (int) Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    @Override
+    public List<DataStatistic> totalProductsByDate() {
+        // TODO Auto-generated method stub
+        return oProductRepo.totalProductsByDate();
+    }
+
+    @Override
+    public List<DataStatistic> totalCombosByDate() {
+        // TODO Auto-generated method stub
+        return oComboRepo.totalCombosByDate();
+    }
+
+    @Override
+    public List<DataStatistic> turnoverByDate() {
+        // TODO Auto-generated method stub
+        return orderRepo.turnoverByDate();
     }
 }

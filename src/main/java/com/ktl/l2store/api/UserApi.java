@@ -115,6 +115,13 @@ public class UserApi {
         return ResponseEntity.status(HttpStatus.OK).body(userDto);
     }
 
+    @RequestMapping(value = "/total-user", method = RequestMethod.GET)
+    public ResponseEntity<Object> getTotalUser()
+            throws ItemNotfoundException {
+
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getAllUser().size());
+    }
+
     // Get user by user name
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     public ResponseEntity<Object> getProfile(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader)

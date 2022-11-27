@@ -102,4 +102,10 @@ public class EvaluateServiceImpl implements EvaluateService {
         return evaluateRepo.findByContentContaining(searchString, pageable);
     }
 
+    @Override
+    public void saveMultiEvaluate(List<Evaluate> evaluates) {
+        // TODO Auto-generated method stub
+        evaluateRepo.saveAll(evaluates);
+    }
+
 }

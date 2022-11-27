@@ -1,5 +1,7 @@
 package com.ktl.l2store.service.CbProduct;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -8,6 +10,8 @@ import com.ktl.l2store.dto.ReqCbProduct;
 import com.ktl.l2store.entity.ComboProduct;
 
 public interface ComboProductService {
+
+    List<ComboProduct> getAll();
 
     Page<ComboProduct> getCombos(Pageable pageable);
 

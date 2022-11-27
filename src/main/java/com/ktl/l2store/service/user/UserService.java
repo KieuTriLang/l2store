@@ -11,6 +11,8 @@ import com.ktl.l2store.exception.ItemNotfoundException;
 
 public interface UserService {
 
+    List<User> getAllUser();
+
     User saveUser(User user);
 
     Role saveRole(Role role);
@@ -38,5 +40,7 @@ public interface UserService {
     void addRoleToUser(String username, String roleName) throws ItemNotfoundException;
 
     void removeRoleFromUser(String username, String roleName) throws ItemNotfoundException;
+
+    void saveMultiUser(List<User> users);
 
 }

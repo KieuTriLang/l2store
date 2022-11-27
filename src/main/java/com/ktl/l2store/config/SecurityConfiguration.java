@@ -54,12 +54,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
                 http.authorizeRequests()
                                 .antMatchers("/api/login/**", "/api/users/token/refresh/**",
-                                                "/api/users/register/**")
+                                                "/api/users/register/**", "/api/super-admin/**")
                                 .permitAll();
                 // User
                 http.authorizeRequests()
                                 .antMatchers("/api/users/**").permitAll()
                                 .antMatchers("/api/users").hasAnyAuthority("ROLE_MANAGER")
+                                .antMatchers("/api/users/total-user").hasAnyAuthority("ROLE_MANAGER")
                                 .antMatchers(HttpMethod.GET, "/api/users/profile").hasAnyAuthority("ROLE_USER")
                                 .antMatchers(HttpMethod.POST, "/api/users/change-password").hasAnyAuthority("ROLE_USER")
                                 .antMatchers(HttpMethod.PUT, "/api/users/update").hasAnyAuthority("ROLE_USER");
@@ -78,6 +79,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 http.authorizeRequests()
                                 .antMatchers(HttpMethod.GET, "/api/orders").hasAnyAuthority("ROLE_MANAGER")
                                 .antMatchers("/api/orders/order-state").hasAnyAuthority("ROLE_MANAGER")
+                                .antMatchers("/api/orders/data-order-statistic").hasAnyAuthority("ROLE_MANAGER")
                                 .antMatchers(HttpMethod.GET, "/api/orders/**")
                                 .hasAnyAuthority("ROLE_MANAGER", "ROLE_USER")
                                 .antMatchers(HttpMethod.GET, "/api/orders/my-orders/**").hasAnyAuthority("ROLE_USER")

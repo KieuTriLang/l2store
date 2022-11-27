@@ -1,6 +1,7 @@
 package com.ktl.l2store.service.CbProduct;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collector;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,6 +118,12 @@ public class ComboProductServiceImpl implements ComboProductService {
         ComboProduct record = cbProductRepo.findById(id)
                 .orElseThrow(() -> new ItemNotfoundException("Not found collection"));
         cbProductRepo.delete(record);
+    }
+
+    @Override
+    public List<ComboProduct> getAll() {
+        // TODO Auto-generated method stub
+        return cbProductRepo.findAll();
     }
 
 }
