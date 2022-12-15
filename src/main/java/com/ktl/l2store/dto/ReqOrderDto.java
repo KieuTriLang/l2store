@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class ReqOrderDto {
 
     @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class Product {
         Long id;
@@ -21,6 +22,7 @@ public class ReqOrderDto {
     }
 
     @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class Combo {
         Long id;

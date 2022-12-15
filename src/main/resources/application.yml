@@ -6,6 +6,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+
     show-sql: false
     properties:
       hibernate:
@@ -19,8 +20,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: 2414lq@gmail.com
-    password: dhhwuqxcgsulvffa
+    username: <YOUR_EMAIL>
+    password: <YOUR_PASSWORD>
     properties:
       mail:
         smtp:
@@ -31,5 +32,5 @@ spring:
 paypal:
   mode: sandbox
   client:
-    id: ASN4zu7ohp-E36hmcT76PnGmTAGWbeerWUu_alivXmEsI7Bdezx5DO03jzsRxlwp-dWlick8OPFxw8Hx
-    secret: EEwMrwtbdnoew7P3pKJDhsYG7HXhEytcQUAKk4SinM5FnItm-JzM0fcpS0V1PczLC_ubCWAYhZLRoc0z
+    id: <PAYPAL_ID>
+    secret: <PAYPAL_SECRET>
